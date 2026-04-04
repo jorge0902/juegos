@@ -37,7 +37,7 @@ let decoracionGroup;
 let enemies;
 let fireballs;
 let bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles;
-let fondoCueva1;
+let fondoCueva1, fondoCueva2;
 let esMundoCueva = false;
 
 let score = 0;
@@ -75,6 +75,7 @@ function preload() {
     this.load.image('montana2', 'montanas/2.png');
     this.load.image('montana3', 'montanas/3.png');
     this.load.image('fCueva1', 'cueva/fondocueva/Pixel Crystal Mine.png');
+    this.load.image('fCueva2', 'cueva/fondocueva/Subterranean Cavern (1).png');
     this.load.image('hongo1', 'cueva/hongos/hongo1.png');
     this.load.image('hongo2', 'cueva/hongos/hongo2.png');
     this.load.image('hongo3', 'cueva/hongos/hongo3.png');
@@ -147,7 +148,7 @@ function update() {
     if (juegoTerminado || pausado) return;
     const isTouchingDown = player.body.touching.down || player.body.blocked.down;
     const scrollX = this.cameras.main.scrollX;
-    
+
     if (player.y > 1000) { perderVida.call(this); }
 
     if (!esMundoCueva && bgNubes && bgNubes.active) {
@@ -188,7 +189,18 @@ function update() {
 
     enemies.getChildren().forEach(e => {
         let dist = Phaser.Math.Distance.Between(player.x, player.y, e.x, e.y);
-        if (dist < 300) { e.setVelocityX(player.x < e.x ? -140 : 140); }
+        if (dist < 400) { 
+            // Persecución horizontal (todos los enemigos)
+            e.setVelocityX(player.x < e.x ? -160 : 160); 
+
+            // PERSECUCIÓN VERTICAL (solo murciélagos/voladores)
+            if (e.getData('esVolador')) {
+                e.setVelocityY(player.y < e.y ? -120 : 120);
+            }
+        } else if (e.getData('esVolador')) {
+            // Si es volador y está lejos, se queda flotando/quieto
+            e.setVelocityY(0);
+        }
         e.setFlipX(e.body.velocity.x > 0);
     });
 }
@@ -197,6 +209,7 @@ function construirMundoExterior() {
     esMundoCueva = false;
     [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(true); });
     if (fondoCueva1) fondoCueva1.setVisible(false);
+    if (fondoCueva2) fondoCueva2.setVisible(false);
 
     this.cameras.main.setBackgroundColor('#5c94fc');
     bgCielo = this.add.tileSprite(0, 0, 1920, 1080, 'cieloAzul').setOrigin(0, 0).setScrollFactor(0).setDepth(-10);
@@ -205,7 +218,7 @@ function construirMundoExterior() {
     bgMontanas2 = this.add.tileSprite(0, 200, TOTAL_WORLD_WIDTH, 600, 'montana2').setOrigin(0, 0).setScrollFactor(0.3).setDepth(-7);
     bgMontanas3 = this.add.tileSprite(0, 300, TOTAL_WORLD_WIDTH, 600, 'montana3').setOrigin(0, 0).setScrollFactor(0.4).setDepth(-6);
     bgArboles = this.add.tileSprite(0, 400, TOTAL_WORLD_WIDTH, 600, 'arbolesImg').setOrigin(0, 0).setScrollFactor(0.6).setDepth(-5);
-    
+
     let currentX = 0; let groundY = 850;
     while (currentX < TOTAL_WORLD_WIDTH) {
         if (Phaser.Math.Between(0, 100) > 80) { groundY = Phaser.Math.Clamp(groundY + Phaser.Math.Between(-2, 2) * 32, 700, 950); }
@@ -233,9 +246,20 @@ function construirMundoExterior() {
 function construirMundoCueva() {
     esMundoCueva = true;
     [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(false); });
+    if (fondoCueva1) fondoCueva1.setVisible(true);
+    if (fondoCueva2) fondoCueva2.setVisible(true);
+
     this.cameras.main.setBackgroundColor('#000000');
-    if (!fondoCueva1) { fondoCueva1 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva1').setOrigin(0, 0).setScrollFactor(0.5).setDepth(-5); }
-    else { fondoCueva1.setVisible(true); }
+    
+    // CAPA 1: Fondo profundo (se mueve más lento)
+    if (!fondoCueva2) { 
+        fondoCueva2 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva2').setOrigin(0, 0).setScrollFactor(0.2).setDepth(-6).setAlpha(0.6); 
+    }
+    
+    // CAPA 2: Fondo cercano
+    if (!fondoCueva1) { 
+        fondoCueva1 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva1').setOrigin(0, 0).setScrollFactor(0.5).setDepth(-5); 
+    }
     
     let currentX = 0; let groundY = 850;
     while (currentX < CAVE_WORLD_WIDTH) {
@@ -253,7 +277,16 @@ function construirMundoCueva() {
         }
         currentX += islandWidth * 32 + Phaser.Math.Between(100, 200);
     }
-    [500, 1500, 2500, CAVE_WORLD_WIDTH - 1000].forEach(x => { let b = enemies.create(x, 200, 'bat'); b.body.allowGravity = false; });
+    
+    // MÁS MURCIÉLAGOS POR TODO EL NIVEL
+    for (let m = 0; m < 15; m++) {
+        let mx = Phaser.Math.Between(400, CAVE_WORLD_WIDTH - 400);
+        let my = Phaser.Math.Between(100, 600);
+        let b = enemies.create(mx, my, 'bat');
+        b.body.allowGravity = false;
+        b.setData('esVolador', true);
+    }
+    
     pipes.create(CAVE_WORLD_WIDTH - 200, groundY - 48, 'pipe').setData('tipo', 'salir');
 }
 
@@ -289,7 +322,7 @@ function crearHUD() {
     const W = 960; // BASADO EN RESOLUCIÓN FIJA 960x540
     hudBarraBG = this.add.rectangle(0, 0, W, 50, 0x000000, 0.45).setOrigin(0, 0).setScrollFactor(0).setDepth(100);
     scoreText = this.add.text(20, 12, 'Puntos: 0', { fontSize: '20px', fill: '#ffffff' }).setScrollFactor(0).setDepth(101);
-    
+
     hudPausaBtn = this.add.text(W - 20, 12, '⏸ Pausa', { fontSize: '14px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
     hudPausaBtn.on('pointerdown', () => togglePausa.call(this));
 
@@ -376,7 +409,7 @@ function crearControlesTactiles() {
     let base = this.add.circle(jX, jY, jRadius, 0x444444, 0.3).setScrollFactor(0).setDepth(200);
     let handle = this.add.circle(jX, jY, 35, 0x888888, 0.6).setScrollFactor(0).setDepth(201);
     let catchArea = this.add.circle(jX, jY, jRadius * 1.5, 0xffffff, 0).setScrollFactor(0).setDepth(202).setInteractive();
-    
+
     catchArea.on('pointermove', (ptr) => {
         if (!ptr.isDown) return;
         let dist = Phaser.Math.Distance.Between(jX, jY, ptr.x, ptr.y);
@@ -400,6 +433,7 @@ function crearControlesTactiles() {
 
     // BOTÓN FULLSCREEN FLOTANTE
     createBtn(W - 50, 110, 35, '⛶', () => {
+
         if (this.scale.isFullscreen) this.scale.stopFullscreen();
         else { this.scale.startFullscreen(); this.scale.refresh(); }
     });
