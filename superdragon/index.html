@@ -2,20 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Super Dragon Bros</title>
     <style>
-        /* Eliminamos cualquier margen que el navegador ponga por defecto */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Reseteo total para eliminar cualquier scroll o margen */
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
         body {
-            background-color: #000; /* Fondo negro */
+            background-color: #000;
             height: 100vh;
             width: 100vw;
             display: flex;
-            justify-content: center; /* Centro horizontal */
-            align-items: center;     /* Centro vertical */
-            overflow: hidden;        /* Evita barras de scroll */
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: fixed; /* Evita scrolls accidentales en móviles */
         }
 
         /* Contenedor responsivo */

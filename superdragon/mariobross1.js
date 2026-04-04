@@ -1,5 +1,5 @@
 // =====================================================================
-// CONFIGURACIÓN GLOBAL DEL MOTOR PHASER (Parámetros Iniciales)
+// CONFIGURACIÓN GLOBAL DEL MOTOR PHASER
 // =====================================================================
 const config = {
     type: Phaser.AUTO,
@@ -90,9 +90,6 @@ function preload() {
     graphics.destroy();
 }
 
-// =====================================================================
-// CREATE
-// =====================================================================
 function create() {
     score = 0; vidas = 5; pausado = false; juegoTerminado = false;
     this.physics.world.setBounds(0, 0, TOTAL_WORLD_WIDTH, 2000);
@@ -141,34 +138,25 @@ function create() {
     }
 }
 
-// =====================================================================
-// UPDATE
-// =====================================================================
 function update() {
     if (juegoTerminado || pausado) return;
-
     const isTouchingDown = player.body.touching.down || player.body.blocked.down;
     const scrollX = this.cameras.main.scrollX;
-
     if (player.y > 1000) { perderVida.call(this); }
-
     if (!esMundoCueva && bgNubes && bgNubes.active) {
         bgNubes.tilePositionX = scrollX * 0.1 + (this.time.now * 0.005);
         bgMontanas1.tilePositionX = scrollX * 0.2; bgMontanas2.tilePositionX = scrollX * 0.3;
         bgMontanas3.tilePositionX = scrollX * 0.4; bgArboles.tilePositionX = scrollX * 0.6;
     }
-
     if (Phaser.Input.Keyboard.JustDown(fireKey) || touchFire) {
         if (touchFire) touchFire = false;
         const ahora = this.time.now;
         if (ahora - lastFireTime > FIRE_COOLDOWN) { lastFireTime = ahora; lanzarFuego.call(this); }
     }
-
     const isSprinting = shiftKey.isDown || touchSprint;
     const currentAccel = isSprinting ? ACCELERATION * 2 : ACCELERATION;
     const currentMaxSpeed = isSprinting ? 500 : SPEED_MAX;
     player.setMaxVelocity(currentMaxSpeed, 1000);
-
     if (cursors.left.isDown || touchLeft) {
         player.setAccelerationX(-currentAccel); player.setFlipX(true);
         if (isTouchingDown) player.anims.play('walk', true);
@@ -182,13 +170,11 @@ function update() {
             else { player.anims.stop(); player.setTexture('dragon1'); }
         }
     }
-
     if ((cursors.up.isDown || touchJump) && isTouchingDown) {
         player.setVelocityY(JUMP_FORCE);
         if (touchJump) touchJump = false;
     }
     if (!isTouchingDown) player.setTexture('dragon3');
-
     enemies.getChildren().forEach(e => {
         let dist = Phaser.Math.Distance.Between(player.x, player.y, e.x, e.y);
         if (dist < 300) { e.setVelocityX(player.x < e.x ? -140 : 140); }
@@ -196,25 +182,19 @@ function update() {
     });
 }
 
-// =====================================================================
-// WORLD BUILDING
-// =====================================================================
 function construirMundoExterior() {
     esMundoCueva = false;
     this.physics.world.setBounds(0, 0, TOTAL_WORLD_WIDTH, 2000);
     this.cameras.main.setBounds(0, 0, TOTAL_WORLD_WIDTH, 1000);
     this.cameras.main.setBackgroundColor('#5c94fc');
-
     bgCielo = this.add.tileSprite(0, 0, 800, 1000, 'cieloAzul').setOrigin(0, 0).setScrollFactor(0).setDepth(-10);
     bgNubes = this.add.tileSprite(0, 0, TOTAL_WORLD_WIDTH, 200, 'nubeImg').setOrigin(0, 0).setScrollFactor(0.1).setDepth(-9);
     bgMontanas1 = this.add.tileSprite(0, 50, TOTAL_WORLD_WIDTH, 600, 'montana1').setOrigin(0, 0).setScrollFactor(0.2).setDepth(-8);
     bgMontanas2 = this.add.tileSprite(0, 200, TOTAL_WORLD_WIDTH, 600, 'montana2').setOrigin(0, 0).setScrollFactor(0.3).setDepth(-7);
     bgMontanas3 = this.add.tileSprite(0, 300, TOTAL_WORLD_WIDTH, 600, 'montana3').setOrigin(0, 0).setScrollFactor(0.4).setDepth(-6);
     bgArboles = this.add.tileSprite(0, 400, TOTAL_WORLD_WIDTH, 600, 'arbolesImg').setOrigin(0, 0).setScrollFactor(0.6).setDepth(-5);
-
     [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(true); });
     if (fondoCueva1) fondoCueva1.setVisible(false);
-
     let currentX = 0; let groundY = 850;
     while (currentX < TOTAL_WORLD_WIDTH) {
         if (Phaser.Math.Between(0, 100) > 80) { groundY = Phaser.Math.Clamp(groundY + Phaser.Math.Between(-2, 2) * 32, 700, 950); }
@@ -228,7 +208,6 @@ function construirMundoExterior() {
         }
         currentX += islandWidth * 32 + Phaser.Math.Between(100, 250);
     }
-
     for (let k = 0; k < 70; k++) {
         let x = Phaser.Math.Between(500, TOTAL_WORLD_WIDTH - 500);
         let y = Phaser.Math.Between(100, 750);
@@ -245,11 +224,9 @@ function construirMundoCueva() {
     this.physics.world.setBounds(0, 0, CAVE_WORLD_WIDTH, 2000);
     this.cameras.main.setBounds(0, 0, CAVE_WORLD_WIDTH, 1000);
     this.cameras.main.setBackgroundColor('#000000');
-
     [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(false); });
     if (!fondoCueva1) { fondoCueva1 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1000, 'fCueva1').setOrigin(0, 0).setScrollFactor(0.5).setDepth(-5); }
     else { fondoCueva1.setVisible(true).setSize(CAVE_WORLD_WIDTH, 1000); }
-
     let currentX = 0; let groundY = 850;
     while (currentX < CAVE_WORLD_WIDTH) {
         if (Phaser.Math.Between(0, 100) > 80) { groundY = Phaser.Math.Clamp(groundY + Phaser.Math.Between(-2, 2) * 32, 700, 950); }
@@ -271,21 +248,16 @@ function construirMundoCueva() {
     pipes.create(CAVE_WORLD_WIDTH - 200, groundY - 48, 'pipe').setData('tipo', 'salir');
 }
 
-// =====================================================================
-// UTILS
-// =====================================================================
 function crearMoneda(escena, x, y) {
     let moneda = coins.create(x, y, 'coin').setScale(1.5).setCircle(15).setBounce(0.8);
     moneda.body.allowGravity = false;
     escena.tweens.add({ targets: moneda, y: y - 25, duration: 2000 + Math.random() * 1000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
     escena.tweens.add({ targets: moneda, scaleX: -1.5, duration: 800, ease: 'Linear', yoyo: true, repeat: -1 });
-    return moneda;
 }
 
 function crearHongoPersonalizado(escena, x, y, key, escala = 1, profundidad = -1, opacidad = 1, volteado = false) {
     let hongo = escena.add.image(x, y, key).setOrigin(0.5, 1).setScale(escala).setDepth(profundidad).setAlpha(opacidad).setFlipX(volteado);
     decoracionGroup.add(hongo);
-    return hongo;
 }
 
 function perderVida() {
@@ -305,9 +277,6 @@ function handleEnemyCollision(p, e) {
     else { perderVida.call(this); p.setVelocity(p.x < e.x ? -600 : 600, -300); p.setAlpha(0.5); }
 }
 
-// =====================================================================
-// UI / HUD
-// =====================================================================
 function crearHUD() {
     this.add.rectangle(0, 0, 800, 48, 0x000000, 0.45).setOrigin(0, 0).setScrollFactor(0).setDepth(100);
     scoreText = this.add.text(16, 12, 'Puntos: 0', { fontSize: '20px', fill: '#ffffff' }).setScrollFactor(0).setDepth(101);
@@ -316,7 +285,6 @@ function crearHUD() {
     hudPausaBtn.on('pointerdown', () => togglePausa.call(this));
     hudReiniciarBtn = this.add.text(570, 12, '↺ Reset', { fontSize: '16px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 8, y: 4 } }).setScrollFactor(0).setDepth(101).setInteractive({ useHandCursor: true });
     hudReiniciarBtn.on('pointerdown', () => { location.reload(); });
-
     let skipNivel2 = this.add.text(450, 12, '⏩ Nivel 2', { fontSize: '16px', fill: '#ffff00', backgroundColor: '#333333', padding: { x: 8, y: 4 } }).setScrollFactor(0).setDepth(101).setInteractive({ useHandCursor: true });
     skipNivel2.on('pointerdown', () => {
         platforms.clear(true, true); pipes.clear(true, true); coins.clear(true, true); enemies.clear(true, true); decoracionGroup.clear(true, true);
@@ -375,19 +343,41 @@ function crearControlesTactiles() {
     const btnColor = 0x333333;
     const createBtn = (x, y, radius, label, callbackDown, callbackUp) => {
         let circle = this.add.circle(x, y, radius, btnColor, btnAlpha).setScrollFactor(0).setDepth(200).setInteractive();
-        let txt = this.add.text(x, y, label, { fontSize: '24px', fill: '#ffffff' }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
-        circle.on('pointerdown', () => { circle.setAlpha(0.8); callbackDown(); });
+        this.add.text(x, y, label, { fontSize: '28px', fill: '#ffffff' }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+        circle.on('pointerdown', (ptr) => { circle.setAlpha(0.8); callbackDown(); });
         if (callbackUp) {
             const release = () => { circle.setAlpha(btnAlpha); callbackUp(); };
             circle.on('pointerup', release); circle.on('pointerout', release);
         }
         return circle;
     };
-    createBtn(80, 520, 45, '◀', () => touchLeft = true, () => touchLeft = false);
-    createBtn(200, 520, 45, '▶', () => touchRight = true, () => touchRight = false);
-    createBtn(720, 520, 50, '⇑', () => touchJump = true, () => touchJump = false);
-    createBtn(610, 520, 40, '🔥', () => touchFire = true, () => touchFire = false);
-    createBtn(720, 410, 35, '⚡', () => touchSprint = true, () => touchSprint = false);
+    const jX = 120, jY = 480, jRadius = 70;
+    let base = this.add.circle(jX, jY, jRadius, 0x444444, 0.3).setScrollFactor(0).setDepth(200);
+    let handle = this.add.circle(jX, jY, 35, 0x888888, 0.6).setScrollFactor(0).setDepth(201);
+    let catchArea = this.add.circle(jX, jY, jRadius * 1.5, 0xffffff, 0).setScrollFactor(0).setDepth(202).setInteractive();
+    catchArea.on('pointermove', (ptr) => {
+        if (!ptr.isDown) return;
+        let dist = Phaser.Math.Distance.Between(jX, jY, ptr.x, ptr.y);
+        let angle = Phaser.Math.Angle.Between(jX, jY, ptr.x, ptr.y);
+        let moveDist = Math.min(dist, jRadius);
+        handle.x = jX + Math.cos(angle) * moveDist;
+        handle.y = jY + Math.sin(angle) * moveDist;
+        if (moveDist > 20) {
+            let deg = Phaser.Math.RadToDeg(angle);
+            touchLeft = (deg > 110 || deg < -110);
+            touchRight = (deg > -70 && deg < 70);
+        } else { touchLeft = false; touchRight = false; }
+    });
+    const resetJoystick = () => { handle.x = jX; handle.y = jY; touchLeft = false; touchRight = false; };
+    catchArea.on('pointerup', resetJoystick);
+    catchArea.on('pointerout', resetJoystick);
+    createBtn(710, 500, 55, '⇑', () => touchJump = true, () => touchJump = false);
+    createBtn(590, 510, 45, '🔥', () => touchFire = true, () => touchFire = false);
+    createBtn(710, 380, 40, '⚡', () => touchSprint = true, () => touchSprint = false);
     createBtn(730, 80, 35, '⏸', () => togglePausa.call(this));
     createBtn(650, 80, 35, '↺', () => location.reload());
+    createBtn(570, 80, 35, '⛶', () => {
+        if (this.scale.isFullscreen) this.scale.stopFullscreen();
+        else { this.scale.startFullscreen(); this.scale.refresh(); }
+    });
 }
