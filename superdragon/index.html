@@ -30,6 +30,18 @@
             background-color: #000;
         }
 
+        /* Ajuste específico para Escritorio (para que no se vea gigante) */
+        @media (min-width: 1024px) {
+            #game-container {
+                max-width: 800px;
+                max-height: 450px;
+                margin: auto;
+                box-shadow: 0 0 30px rgba(0,0,0,0.8);
+                border: 2px solid #333;
+                border-radius: 4px;
+            }
+        }
+
         /* Mensaje para forzar rotación en móviles */
         #rotate-warning {
             display: none;
