@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Dragon Bros</title>
+    <style>
+        /* Eliminamos cualquier margen que el navegador ponga por defecto */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #000; /* Fondo negro */
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center; /* Centro horizontal */
+            align-items: center;     /* Centro vertical */
+            overflow: hidden;        /* Evita barras de scroll */
+        }
+
+        /* Este es el contenedor donde Phaser meterá el juego */
+        #game-container {
+            width: 800px;
+            height: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            image-rendering: pixelated; /* Píxeles nítidos */
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+    <script src="mariobross1.js"></script>
+</body>
+</html>
