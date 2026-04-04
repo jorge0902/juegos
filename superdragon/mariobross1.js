@@ -133,6 +133,9 @@ function create() {
     this.cameras.main.startFollow(player, true, 0.08, 0.08);
     crearHUD.call(this);
 
+    // ACTIVAR MULTITÁCTIL (Permite hasta 3 dedos a la vez)
+    this.input.addPointer(2); 
+
     if (this.sys.game.device.input.touch) {
         crearControlesTactiles.call(this);
     }
