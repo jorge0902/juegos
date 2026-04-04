@@ -269,12 +269,20 @@ function construirMundoCueva() {
             let px = currentX + i * 32 + 16;
             if (px > CAVE_WORLD_WIDTH) break;
             platforms.create(px, groundY, 'rock');
-            if (Phaser.Math.Between(0, 100) > 90) {
-                let hongoKey = `hongo${Phaser.Math.Between(1, 3)}`;
-                crearHongoPersonalizado(this, px, groundY + 15, hongoKey, Phaser.Math.FloatBetween(0.6, 1.5), 20, 1, Math.random() > 0.5);
-            }
             if (Phaser.Math.Between(0, 10) > 8) { crearMoneda(this, px, groundY - 100); }
         }
+
+        // AGREGAR OBJETOS/PLATAFORMAS FLOTANTES
+        if (Phaser.Math.Between(0, 10) > 7) {
+            let floatX = currentX + Phaser.Math.Between(0, islandWidth * 32);
+            let floatY = groundY - Phaser.Math.Between(150, 400);
+            let floatWidth = Phaser.Math.Between(2, 5);
+            for (let j = 0; j < floatWidth; j++) {
+                platforms.create(floatX + (j * 32), floatY, 'rock');
+                if (Phaser.Math.Between(0, 10) > 5) { crearMoneda(this, floatX + (j * 32), floatY - 50); }
+            }
+        }
+
         currentX += islandWidth * 32 + Phaser.Math.Between(100, 200);
     }
     
