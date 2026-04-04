@@ -1,10 +1,10 @@
 // =====================================================================
-// CONFIGURACIÓN GLOBAL DEL MOTOR PHASER (MODO WIDESCREEN)
+// CONFIGURACIÓN GLOBAL DEL MOTOR PHASER (MODO ESTABLE 16:9)
 // =====================================================================
 const config = {
     type: Phaser.AUTO,
-    width: 800, 
-    height: 600,
+    width: 960,  // NUEVA RESOLUCIÓN ESTÁNDAR 16:9
+    height: 540,
     parent: 'game-container',
     backgroundColor: '#5c94fc',
     physics: {
@@ -15,7 +15,7 @@ const config = {
         }
     },
     scale: {
-        mode: Phaser.Scale.EXPAND, // EL MODO EXPAND ELIMINA LAS BARRAS NEGRAS
+        mode: Phaser.Scale.FIT, // MODO FIT EVITA DISTORSIÓN (ESTIRAMIENTO)
         autoCenter: Phaser.Scale.CENTER_BOTH,
         forceOrientation: true,
         orientation: 'landscape'
@@ -52,7 +52,7 @@ const FIRE_COOLDOWN = 400;
 // CONTROLES TÁCTILES
 let touchLeft = false, touchRight = false, touchJump = false, touchFire = false, touchSprint = false;
 
-let scoreText, vidasText, hudPausaBtn, hudReiniciarBtn, hudNivel2Btn, hudFSBtn, pantallaOverlay, hudBarraBG;
+let scoreText, vidasText, hudPausaBtn, hudReiniciarBtn, hudNivel2Btn, pantallaOverlay, hudBarraBG;
 let heartsGroup;
 
 const SPEED_MAX = 300;
@@ -286,38 +286,29 @@ function handleEnemyCollision(p, e) {
 }
 
 function crearHUD() {
-    const W = this.scale.width;
+    const W = 960; // BASADO EN RESOLUCIÓN FIJA 960x540
     hudBarraBG = this.add.rectangle(0, 0, W, 50, 0x000000, 0.45).setOrigin(0, 0).setScrollFactor(0).setDepth(100);
     scoreText = this.add.text(20, 12, 'Puntos: 0', { fontSize: '20px', fill: '#ffffff' }).setScrollFactor(0).setDepth(101);
     
-    hudPausaBtn = this.add.text(W - 80, 12, '⏸ Pausa', { fontSize: '14px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
+    hudPausaBtn = this.add.text(W - 20, 12, '⏸ Pausa', { fontSize: '14px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
     hudPausaBtn.on('pointerdown', () => togglePausa.call(this));
 
-    hudReiniciarBtn = this.add.text(W - 170, 12, '↺ Reset', { fontSize: '14px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
+    hudReiniciarBtn = this.add.text(W - 110, 12, '↺ Reset', { fontSize: '14px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
     hudReiniciarBtn.on('pointerdown', () => { location.reload(); });
 
-    hudNivel2Btn = this.add.text(W - 250, 12, '⏩ Nivel 2', { fontSize: '14px', fill: '#ffff00', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
+    hudNivel2Btn = this.add.text(W - 200, 12, '⏩ Nivel 2', { fontSize: '14px', fill: '#ffff00', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
     hudNivel2Btn.on('pointerdown', () => {
         platforms.clear(true, true); pipes.clear(true, true); coins.clear(true, true); enemies.clear(true, true); decoracionGroup.clear(true, true);
         construirMundoCueva.call(this); player.setPosition(200, 400); player.setAlpha(1);
     });
 
     actualizarVidasHUD.call(this);
-
-    this.scale.on('resize', () => {
-        const nW = this.scale.width;
-        hudBarraBG.width = nW;
-        hudPausaBtn.setX(nW - 20);
-        hudReiniciarBtn.setX(nW - 110);
-        hudNivel2Btn.setX(nW - 200);
-        actualizarVidasHUD.call(this);
-    });
 }
 
 function actualizarVidasHUD() {
     if (heartsGroup) heartsGroup.destroy(true);
     heartsGroup = this.add.group();
-    const midX = this.scale.width / 2 - (vidas * 14);
+    const midX = 480 - (vidas * 14); // CENTRADO EN 960
     for (let i = 0; i < vidas; i++) {
         let heart = this.add.image(midX + i * 28, 24, 'heart').setScrollFactor(0).setDepth(101).setScale(1.1);
         heartsGroup.add(heart);
@@ -351,11 +342,9 @@ function handlePipeEntry(player, pipe) {
 
 function mostrarOverlay(titulo, subtitulo) {
     if (pantallaOverlay) pantallaOverlay.destroy();
-    const W = this.scale.width;
-    const H = this.scale.height;
-    let bg = this.add.rectangle(W/2, H/2, 500, 220, 0x000000, 0.8).setScrollFactor(0).setDepth(110);
-    let tit = this.add.text(W/2, H/2 - 40, titulo, { fontSize: '36px', fill: '#ffffff' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
-    let sub = this.add.text(W/2, H/2 + 20, subtitulo, { fontSize: '16px', fill: '#cccccc' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
+    let bg = this.add.rectangle(480, 270, 500, 220, 0x000000, 0.8).setScrollFactor(0).setDepth(110);
+    let tit = this.add.text(480, 230, titulo, { fontSize: '36px', fill: '#ffffff' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
+    let sub = this.add.text(480, 290, subtitulo, { fontSize: '16px', fill: '#cccccc' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
     pantallaOverlay = this.add.group([bg, tit, sub]);
 }
 
@@ -366,8 +355,8 @@ function togglePausa() {
 }
 
 function crearControlesTactiles() {
-    const W = this.scale.width;
-    const H = this.scale.height;
+    const W = 960;
+    const H = 540;
     const btnAlpha = 0.45;
     const btnColor = 0x333333;
 
@@ -383,7 +372,7 @@ function crearControlesTactiles() {
     };
 
     // JOYSTICK IZQUIERDA
-    const jX = 120, jY = H - 120, jRadius = 70;
+    const jX = 120, jY = H - 100, jRadius = 70;
     let base = this.add.circle(jX, jY, jRadius, 0x444444, 0.3).setScrollFactor(0).setDepth(200);
     let handle = this.add.circle(jX, jY, 35, 0x888888, 0.6).setScrollFactor(0).setDepth(201);
     let catchArea = this.add.circle(jX, jY, jRadius * 1.5, 0xffffff, 0).setScrollFactor(0).setDepth(202).setInteractive();
@@ -405,12 +394,12 @@ function crearControlesTactiles() {
     catchArea.on('pointerup', resetJoystick); catchArea.on('pointerout', resetJoystick);
 
     // BOTONES ACCIÓN DERECHA
-    createBtn(W - 100, H - 120, 55, '⇑', () => touchJump = true, () => touchJump = false);
-    createBtn(W - 220, H - 110, 45, '🔥', () => touchFire = true, () => touchFire = false);
-    createBtn(W - 100, H - 240, 40, '⚡', () => touchSprint = true, () => touchSprint = false);
+    createBtn(W - 90, H - 90, 55, '⇑', () => touchJump = true, () => touchJump = false);
+    createBtn(W - 200, H - 80, 45, '🔥', () => touchFire = true, () => touchFire = false);
+    createBtn(W - 90, H - 200, 40, '⚡', () => touchSprint = true, () => touchSprint = false);
 
     // BOTÓN FULLSCREEN FLOTANTE
-    createBtn(W - 60, 120, 35, '⛶', () => {
+    createBtn(W - 50, 110, 35, '⛶', () => {
         if (this.scale.isFullscreen) this.scale.stopFullscreen();
         else { this.scale.startFullscreen(); this.scale.refresh(); }
     });
