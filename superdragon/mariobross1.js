@@ -1,9 +1,9 @@
 // =====================================================================
-// CONFIGURACIÓN GLOBAL DEL MOTOR PHASER
+// CONFIGURACIÓN GLOBAL DEL MOTOR PHASER (MODO WIDESCREEN)
 // =====================================================================
 const config = {
     type: Phaser.AUTO,
-    width: 800,
+    width: 800, 
     height: 600,
     parent: 'game-container',
     backgroundColor: '#5c94fc',
@@ -15,7 +15,7 @@ const config = {
         }
     },
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.EXPAND, // EL MODO EXPAND ELIMINA LAS BARRAS NEGRAS
         autoCenter: Phaser.Scale.CENTER_BOTH,
         forceOrientation: true,
         orientation: 'landscape'
@@ -52,7 +52,8 @@ const FIRE_COOLDOWN = 400;
 // CONTROLES TÁCTILES
 let touchLeft = false, touchRight = false, touchJump = false, touchFire = false, touchSprint = false;
 
-let scoreText, vidasText, hudPausaBtn, hudReiniciarBtn, pantallaOverlay;
+let scoreText, vidasText, hudPausaBtn, hudReiniciarBtn, hudNivel2Btn, hudFSBtn, pantallaOverlay, hudBarraBG;
+let heartsGroup;
 
 const SPEED_MAX = 300;
 const ACCELERATION = 600;
@@ -131,10 +132,11 @@ function create() {
     fireKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     this.cameras.main.startFollow(player, true, 0.08, 0.08);
-    crearHUD.call(this);
 
-    // ACTIVAR MULTITÁCTIL (Permite hasta 3 dedos a la vez)
-    this.input.addPointer(2); 
+    // ACTIVAR MULTITÁCTIL
+    this.input.addPointer(3);
+
+    crearHUD.call(this);
 
     if (this.sys.game.device.input.touch) {
         crearControlesTactiles.call(this);
@@ -145,21 +147,26 @@ function update() {
     if (juegoTerminado || pausado) return;
     const isTouchingDown = player.body.touching.down || player.body.blocked.down;
     const scrollX = this.cameras.main.scrollX;
+    
     if (player.y > 1000) { perderVida.call(this); }
+
     if (!esMundoCueva && bgNubes && bgNubes.active) {
         bgNubes.tilePositionX = scrollX * 0.1 + (this.time.now * 0.005);
         bgMontanas1.tilePositionX = scrollX * 0.2; bgMontanas2.tilePositionX = scrollX * 0.3;
         bgMontanas3.tilePositionX = scrollX * 0.4; bgArboles.tilePositionX = scrollX * 0.6;
     }
+
     if (Phaser.Input.Keyboard.JustDown(fireKey) || touchFire) {
         if (touchFire) touchFire = false;
         const ahora = this.time.now;
         if (ahora - lastFireTime > FIRE_COOLDOWN) { lastFireTime = ahora; lanzarFuego.call(this); }
     }
+
     const isSprinting = shiftKey.isDown || touchSprint;
     const currentAccel = isSprinting ? ACCELERATION * 2 : ACCELERATION;
     const currentMaxSpeed = isSprinting ? 500 : SPEED_MAX;
     player.setMaxVelocity(currentMaxSpeed, 1000);
+
     if (cursors.left.isDown || touchLeft) {
         player.setAccelerationX(-currentAccel); player.setFlipX(true);
         if (isTouchingDown) player.anims.play('walk', true);
@@ -178,6 +185,7 @@ function update() {
         if (touchJump) touchJump = false;
     }
     if (!isTouchingDown) player.setTexture('dragon3');
+
     enemies.getChildren().forEach(e => {
         let dist = Phaser.Math.Distance.Between(player.x, player.y, e.x, e.y);
         if (dist < 300) { e.setVelocityX(player.x < e.x ? -140 : 140); }
@@ -187,17 +195,17 @@ function update() {
 
 function construirMundoExterior() {
     esMundoCueva = false;
-    this.physics.world.setBounds(0, 0, TOTAL_WORLD_WIDTH, 2000);
-    this.cameras.main.setBounds(0, 0, TOTAL_WORLD_WIDTH, 1000);
+    [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(true); });
+    if (fondoCueva1) fondoCueva1.setVisible(false);
+
     this.cameras.main.setBackgroundColor('#5c94fc');
-    bgCielo = this.add.tileSprite(0, 0, 800, 1000, 'cieloAzul').setOrigin(0, 0).setScrollFactor(0).setDepth(-10);
+    bgCielo = this.add.tileSprite(0, 0, 1920, 1080, 'cieloAzul').setOrigin(0, 0).setScrollFactor(0).setDepth(-10);
     bgNubes = this.add.tileSprite(0, 0, TOTAL_WORLD_WIDTH, 200, 'nubeImg').setOrigin(0, 0).setScrollFactor(0.1).setDepth(-9);
     bgMontanas1 = this.add.tileSprite(0, 50, TOTAL_WORLD_WIDTH, 600, 'montana1').setOrigin(0, 0).setScrollFactor(0.2).setDepth(-8);
     bgMontanas2 = this.add.tileSprite(0, 200, TOTAL_WORLD_WIDTH, 600, 'montana2').setOrigin(0, 0).setScrollFactor(0.3).setDepth(-7);
     bgMontanas3 = this.add.tileSprite(0, 300, TOTAL_WORLD_WIDTH, 600, 'montana3').setOrigin(0, 0).setScrollFactor(0.4).setDepth(-6);
     bgArboles = this.add.tileSprite(0, 400, TOTAL_WORLD_WIDTH, 600, 'arbolesImg').setOrigin(0, 0).setScrollFactor(0.6).setDepth(-5);
-    [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(true); });
-    if (fondoCueva1) fondoCueva1.setVisible(false);
+    
     let currentX = 0; let groundY = 850;
     while (currentX < TOTAL_WORLD_WIDTH) {
         if (Phaser.Math.Between(0, 100) > 80) { groundY = Phaser.Math.Clamp(groundY + Phaser.Math.Between(-2, 2) * 32, 700, 950); }
@@ -224,12 +232,11 @@ function construirMundoExterior() {
 
 function construirMundoCueva() {
     esMundoCueva = true;
-    this.physics.world.setBounds(0, 0, CAVE_WORLD_WIDTH, 2000);
-    this.cameras.main.setBounds(0, 0, CAVE_WORLD_WIDTH, 1000);
-    this.cameras.main.setBackgroundColor('#000000');
     [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(false); });
-    if (!fondoCueva1) { fondoCueva1 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1000, 'fCueva1').setOrigin(0, 0).setScrollFactor(0.5).setDepth(-5); }
-    else { fondoCueva1.setVisible(true).setSize(CAVE_WORLD_WIDTH, 1000); }
+    this.cameras.main.setBackgroundColor('#000000');
+    if (!fondoCueva1) { fondoCueva1 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva1').setOrigin(0, 0).setScrollFactor(0.5).setDepth(-5); }
+    else { fondoCueva1.setVisible(true); }
+    
     let currentX = 0; let groundY = 850;
     while (currentX < CAVE_WORLD_WIDTH) {
         if (Phaser.Math.Between(0, 100) > 80) { groundY = Phaser.Math.Clamp(groundY + Phaser.Math.Between(-2, 2) * 32, 700, 950); }
@@ -240,8 +247,7 @@ function construirMundoCueva() {
             platforms.create(px, groundY, 'rock');
             if (Phaser.Math.Between(0, 100) > 90) {
                 let hongoKey = `hongo${Phaser.Math.Between(1, 3)}`;
-                let prof = (Math.random() > 0.7) ? 20 : -1;
-                crearHongoPersonalizado(this, px, groundY + 15, hongoKey, Phaser.Math.FloatBetween(0.6, 1.5), prof, 1, Math.random() > 0.5);
+                crearHongoPersonalizado(this, px, groundY + 15, hongoKey, Phaser.Math.FloatBetween(0.6, 1.5), 20, 1, Math.random() > 0.5);
             }
             if (Phaser.Math.Between(0, 10) > 8) { crearMoneda(this, px, groundY - 100); }
         }
@@ -255,7 +261,6 @@ function crearMoneda(escena, x, y) {
     let moneda = coins.create(x, y, 'coin').setScale(1.5).setCircle(15).setBounce(0.8);
     moneda.body.allowGravity = false;
     escena.tweens.add({ targets: moneda, y: y - 25, duration: 2000 + Math.random() * 1000, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
-    escena.tweens.add({ targets: moneda, scaleX: -1.5, duration: 800, ease: 'Linear', yoyo: true, repeat: -1 });
 }
 
 function crearHongoPersonalizado(escena, x, y, key, escala = 1, profundidad = -1, opacidad = 1, volteado = false) {
@@ -281,30 +286,47 @@ function handleEnemyCollision(p, e) {
 }
 
 function crearHUD() {
-    this.add.rectangle(0, 0, 800, 48, 0x000000, 0.45).setOrigin(0, 0).setScrollFactor(0).setDepth(100);
-    scoreText = this.add.text(16, 12, 'Puntos: 0', { fontSize: '20px', fill: '#ffffff' }).setScrollFactor(0).setDepth(101);
-    actualizarVidasHUD.call(this);
-    hudPausaBtn = this.add.text(680, 12, '⏸ Pausa', { fontSize: '16px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 8, y: 4 } }).setScrollFactor(0).setDepth(101).setInteractive({ useHandCursor: true });
+    const W = this.scale.width;
+    hudBarraBG = this.add.rectangle(0, 0, W, 50, 0x000000, 0.45).setOrigin(0, 0).setScrollFactor(0).setDepth(100);
+    scoreText = this.add.text(20, 12, 'Puntos: 0', { fontSize: '20px', fill: '#ffffff' }).setScrollFactor(0).setDepth(101);
+    
+    hudPausaBtn = this.add.text(W - 80, 12, '⏸ Pausa', { fontSize: '14px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
     hudPausaBtn.on('pointerdown', () => togglePausa.call(this));
-    hudReiniciarBtn = this.add.text(570, 12, '↺ Reset', { fontSize: '16px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 8, y: 4 } }).setScrollFactor(0).setDepth(101).setInteractive({ useHandCursor: true });
+
+    hudReiniciarBtn = this.add.text(W - 170, 12, '↺ Reset', { fontSize: '14px', fill: '#ffffff', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
     hudReiniciarBtn.on('pointerdown', () => { location.reload(); });
-    let skipNivel2 = this.add.text(450, 12, '⏩ Nivel 2', { fontSize: '16px', fill: '#ffff00', backgroundColor: '#333333', padding: { x: 8, y: 4 } }).setScrollFactor(0).setDepth(101).setInteractive({ useHandCursor: true });
-    skipNivel2.on('pointerdown', () => {
+
+    hudNivel2Btn = this.add.text(W - 250, 12, '⏩ Nivel 2', { fontSize: '14px', fill: '#ffff00', backgroundColor: '#333333', padding: { x: 6, y: 3 } }).setOrigin(1, 0).setScrollFactor(0).setDepth(101).setInteractive();
+    hudNivel2Btn.on('pointerdown', () => {
         platforms.clear(true, true); pipes.clear(true, true); coins.clear(true, true); enemies.clear(true, true); decoracionGroup.clear(true, true);
         construirMundoCueva.call(this); player.setPosition(200, 400); player.setAlpha(1);
+    });
+
+    actualizarVidasHUD.call(this);
+
+    this.scale.on('resize', () => {
+        const nW = this.scale.width;
+        hudBarraBG.width = nW;
+        hudPausaBtn.setX(nW - 20);
+        hudReiniciarBtn.setX(nW - 110);
+        hudNivel2Btn.setX(nW - 200);
+        actualizarVidasHUD.call(this);
     });
 }
 
 function actualizarVidasHUD() {
-    if (this._hearts) this._hearts.forEach(h => h.destroy());
-    this._hearts = [];
-    for (let i = 0; i < vidas; i++) { this._hearts.push(this.add.image(310 + i * 28, 24, 'heart').setScrollFactor(0).setDepth(101).setScale(1.1)); }
+    if (heartsGroup) heartsGroup.destroy(true);
+    heartsGroup = this.add.group();
+    const midX = this.scale.width / 2 - (vidas * 14);
+    for (let i = 0; i < vidas; i++) {
+        let heart = this.add.image(midX + i * 28, 24, 'heart').setScrollFactor(0).setDepth(101).setScale(1.1);
+        heartsGroup.add(heart);
+    }
 }
 
 function gameOver() {
-    juegoTerminado = true; this.physics.pause(); player.setTint(0xff4444); player.setVisible(false);
+    juegoTerminado = true; this.physics.pause();
     mostrarOverlay.call(this, '💀 GAME OVER', '¡Derrotado!');
-    this.add.text(400, 350, '↺ Haz Reset para reintentar', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
 }
 
 function lanzarFuego() {
@@ -329,9 +351,11 @@ function handlePipeEntry(player, pipe) {
 
 function mostrarOverlay(titulo, subtitulo) {
     if (pantallaOverlay) pantallaOverlay.destroy();
-    let bg = this.add.rectangle(400, 300, 500, 220, 0x000000, 0.8).setScrollFactor(0).setDepth(110);
-    let tit = this.add.text(400, 230, titulo, { fontSize: '36px', fill: '#ffffff' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
-    let sub = this.add.text(400, 285, subtitulo, { fontSize: '16px', fill: '#cccccc' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
+    const W = this.scale.width;
+    const H = this.scale.height;
+    let bg = this.add.rectangle(W/2, H/2, 500, 220, 0x000000, 0.8).setScrollFactor(0).setDepth(110);
+    let tit = this.add.text(W/2, H/2 - 40, titulo, { fontSize: '36px', fill: '#ffffff' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
+    let sub = this.add.text(W/2, H/2 + 20, subtitulo, { fontSize: '16px', fill: '#cccccc' }).setOrigin(0.5).setScrollFactor(0).setDepth(111);
     pantallaOverlay = this.add.group([bg, tit, sub]);
 }
 
@@ -342,8 +366,11 @@ function togglePausa() {
 }
 
 function crearControlesTactiles() {
+    const W = this.scale.width;
+    const H = this.scale.height;
     const btnAlpha = 0.45;
     const btnColor = 0x333333;
+
     const createBtn = (x, y, radius, label, callbackDown, callbackUp) => {
         let circle = this.add.circle(x, y, radius, btnColor, btnAlpha).setScrollFactor(0).setDepth(200).setInteractive();
         this.add.text(x, y, label, { fontSize: '28px', fill: '#ffffff' }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
@@ -354,10 +381,13 @@ function crearControlesTactiles() {
         }
         return circle;
     };
-    const jX = 120, jY = 480, jRadius = 70;
+
+    // JOYSTICK IZQUIERDA
+    const jX = 120, jY = H - 120, jRadius = 70;
     let base = this.add.circle(jX, jY, jRadius, 0x444444, 0.3).setScrollFactor(0).setDepth(200);
     let handle = this.add.circle(jX, jY, 35, 0x888888, 0.6).setScrollFactor(0).setDepth(201);
     let catchArea = this.add.circle(jX, jY, jRadius * 1.5, 0xffffff, 0).setScrollFactor(0).setDepth(202).setInteractive();
+    
     catchArea.on('pointermove', (ptr) => {
         if (!ptr.isDown) return;
         let dist = Phaser.Math.Distance.Between(jX, jY, ptr.x, ptr.y);
@@ -372,14 +402,15 @@ function crearControlesTactiles() {
         } else { touchLeft = false; touchRight = false; }
     });
     const resetJoystick = () => { handle.x = jX; handle.y = jY; touchLeft = false; touchRight = false; };
-    catchArea.on('pointerup', resetJoystick);
-    catchArea.on('pointerout', resetJoystick);
-    createBtn(710, 500, 55, '⇑', () => touchJump = true, () => touchJump = false);
-    createBtn(590, 510, 45, '🔥', () => touchFire = true, () => touchFire = false);
-    createBtn(710, 380, 40, '⚡', () => touchSprint = true, () => touchSprint = false);
-    createBtn(730, 80, 35, '⏸', () => togglePausa.call(this));
-    createBtn(650, 80, 35, '↺', () => location.reload());
-    createBtn(570, 80, 35, '⛶', () => {
+    catchArea.on('pointerup', resetJoystick); catchArea.on('pointerout', resetJoystick);
+
+    // BOTONES ACCIÓN DERECHA
+    createBtn(W - 100, H - 120, 55, '⇑', () => touchJump = true, () => touchJump = false);
+    createBtn(W - 220, H - 110, 45, '🔥', () => touchFire = true, () => touchFire = false);
+    createBtn(W - 100, H - 240, 40, '⚡', () => touchSprint = true, () => touchSprint = false);
+
+    // BOTÓN FULLSCREEN FLOTANTE
+    createBtn(W - 60, 120, 35, '⛶', () => {
         if (this.scale.isFullscreen) this.scale.stopFullscreen();
         else { this.scale.startFullscreen(); this.scale.refresh(); }
     });
