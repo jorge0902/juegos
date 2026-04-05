@@ -253,7 +253,10 @@ function construirMundoExterior() {
         let y = Phaser.Math.Between(100, 750);
         let anchoIsla = Phaser.Math.Between(3, 7);
         for (let i = 0; i < anchoIsla; i++) { platforms.create(x + (i * 32), y, 'brick'); }
-        if (Phaser.Math.Between(0, 10) > 6) { enemies.create(x + (Math.floor(anchoIsla / 2) * 32), y - 40, 'slime'); }
+        if (Phaser.Math.Between(0, 10) > 6) { 
+            let c = enemies.create(x + (Math.floor(anchoIsla / 2) * 32), y - 40, 'cubo1').setScale(0.12);
+            c.anims.play('cuboCaminar');
+        }
         if (Phaser.Math.Between(0, 10) > 4) { crearMoneda(this, x + (Phaser.Math.Between(0, anchoIsla - 1) * 32), y - 50); }
     }
     pipes.create(TOTAL_WORLD_WIDTH - 200, groundY - 48, 'pipe').setData('tipo', 'entrar');
