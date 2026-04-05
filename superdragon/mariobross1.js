@@ -412,27 +412,9 @@ function crearControlesTactiles() {
         return circle;
     };
 
-    // JOYSTICK IZQUIERDA
-    const jX = 120, jY = H - 100, jRadius = 70;
-    let base = this.add.circle(jX, jY, jRadius, 0x444444, 0.3).setScrollFactor(0).setDepth(200);
-    let handle = this.add.circle(jX, jY, 35, 0x888888, 0.6).setScrollFactor(0).setDepth(201);
-    let catchArea = this.add.circle(jX, jY, jRadius * 1.5, 0xffffff, 0).setScrollFactor(0).setDepth(202).setInteractive();
-
-    catchArea.on('pointermove', (ptr) => {
-        if (!ptr.isDown) return;
-        let dist = Phaser.Math.Distance.Between(jX, jY, ptr.x, ptr.y);
-        let angle = Phaser.Math.Angle.Between(jX, jY, ptr.x, ptr.y);
-        let moveDist = Math.min(dist, jRadius);
-        handle.x = jX + Math.cos(angle) * moveDist;
-        handle.y = jY + Math.sin(angle) * moveDist;
-        if (moveDist > 20) {
-            let deg = Phaser.Math.RadToDeg(angle);
-            touchLeft = (deg > 110 || deg < -110);
-            touchRight = (deg > -70 && deg < 70);
-        } else { touchLeft = false; touchRight = false; }
-    });
-    const resetJoystick = () => { handle.x = jX; handle.y = jY; touchLeft = false; touchRight = false; };
-    catchArea.on('pointerup', resetJoystick); catchArea.on('pointerout', resetJoystick);
+    // BOTONES DE DIRECCIÓN IZQUIERDA
+    createBtn(80, H - 80, 50, '←', () => touchLeft = true, () => touchLeft = false);
+    createBtn(200, H - 80, 50, '→', () => touchRight = true, () => touchRight = false);
 
     // BOTONES ACCIÓN DERECHA
     createBtn(W - 90, H - 90, 55, '⇑', () => touchJump = true, () => touchJump = false);
@@ -441,7 +423,6 @@ function crearControlesTactiles() {
 
     // BOTÓN FULLSCREEN FLOTANTE
     createBtn(W - 50, 110, 35, '⛶', () => {
-
         if (this.scale.isFullscreen) this.scale.stopFullscreen();
         else { this.scale.startFullscreen(); this.scale.refresh(); }
     });

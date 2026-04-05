@@ -58,9 +58,9 @@
         }
 
         canvas {
-            image-rendering: pixelated; /* Píxeles nítidos */
             max-width: 100%;
             max-height: 100%;
+            object-fit: contain; /* Garantiza bandas negras sin estiramiento */
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
