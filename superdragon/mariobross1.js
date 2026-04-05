@@ -109,14 +109,7 @@ function create() {
     fireballs = this.physics.add.group({ defaultKey: 'fireball', maxSize: 10 });
     decoracionGroup = this.add.group();
 
-    construirMundoExterior.call(this);
-
-    player = this.physics.add.sprite(100, 400, 'dragon1').setScale(0.17).setCollideWorldBounds(true);
-    player.body.setSize(320, 400).setOffset(550, 300);
-    player.setMaxVelocity(SPEED_MAX, 1000).setDragX(DRAG);
-    player.setDepth(10);
-    player.setData('invencible', false);
-
+    // DEFINICIÓN DE ANIMACIONES (AL PRINCIPIO PARA QUE ESTÉN LISTAS)
     this.anims.create({
         key: 'walk',
         frames: [{ key: 'dragon1' }, { key: 'dragon2' }, { key: 'dragon3' }, { key: 'dragon4' }, { key: 'dragon5' }],
@@ -134,6 +127,10 @@ function create() {
         frames: [{ key: 'cubo1' }, { key: 'cubo2' }, { key: 'cubo3' }, { key: 'cubo4' }],
         frameRate: 6, repeat: -1
     });
+
+    construirMundoExterior.call(this);
+
+    player = this.physics.add.sprite(100, 400, 'dragon1').setScale(0.17).setCollideWorldBounds(true);
 
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(enemies, platforms);
