@@ -131,6 +131,10 @@ function create() {
     construirMundoExterior.call(this);
 
     player = this.physics.add.sprite(100, 400, 'dragon1').setScale(0.17).setCollideWorldBounds(true);
+    player.body.setSize(320, 400).setOffset(550, 300);
+    player.setMaxVelocity(SPEED_MAX, 1000).setDragX(DRAG);
+    player.setDepth(10);
+    player.setData('invencible', false);
 
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(enemies, platforms);
@@ -238,8 +242,7 @@ function construirMundoExterior() {
             if (px > TOTAL_WORLD_WIDTH) break;
             platforms.create(px, groundY, 'brick');
             if (currentX > 500 && Phaser.Math.Between(0, 100) > 95) {
-                let c = enemies.create(px, groundY - 40, 'cubo1').setScale(0.12);
-                c.anims.play('cuboCaminar');
+                enemies.create(px, groundY - 40, 'cubo1').setScale(0.12);
             }
             if (Phaser.Math.Between(0, 10) > 8) { crearMoneda(this, px, groundY - 100); }
         }
@@ -251,8 +254,7 @@ function construirMundoExterior() {
         let anchoIsla = Phaser.Math.Between(3, 7);
         for (let i = 0; i < anchoIsla; i++) { platforms.create(x + (i * 32), y, 'brick'); }
         if (Phaser.Math.Between(0, 10) > 6) { 
-            let c = enemies.create(x + (Math.floor(anchoIsla / 2) * 32), y - 40, 'cubo1').setScale(0.12);
-            c.anims.play('cuboCaminar');
+            enemies.create(x + (Math.floor(anchoIsla / 2) * 32), y - 40, 'cubo1').setScale(0.12);
         }
         if (Phaser.Math.Between(0, 10) > 4) { crearMoneda(this, x + (Phaser.Math.Between(0, anchoIsla - 1) * 32), y - 50); }
     }
@@ -307,7 +309,6 @@ function construirMundoCueva() {
         let mx = Phaser.Math.Between(400, CAVE_WORLD_WIDTH - 400);
         let my = Phaser.Math.Between(100, 600);
         let c = enemies.create(mx, my, 'cerebro1').setScale(0.12);
-        c.anims.play('cerebroVuelo');
         c.body.allowGravity = false;
         c.setData('esVolador', true);
     }
