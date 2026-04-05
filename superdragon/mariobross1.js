@@ -76,6 +76,9 @@ function preload() {
     this.load.image('montana3', 'montanas/3.png');
     this.load.image('fCueva1', 'cueva/fondocueva/Pixel Crystal Mine.png');
     this.load.image('fCueva2', 'cueva/fondocueva/Subterranean Cavern (1).png');
+    this.load.image('cerebro1', 'cueva/enemigo cerebro/1frame.png');
+    this.load.image('cerebro2', 'cueva/enemigo cerebro/frame2.png');
+    this.load.image('cerebro3', 'cueva/enemigo cerebro/frame3.png');
     this.load.image('hongo1', 'cueva/hongos/hongo1.png');
     this.load.image('hongo2', 'cueva/hongos/hongo2.png');
     this.load.image('hongo3', 'cueva/hongos/hongo3.png');
@@ -86,7 +89,6 @@ function preload() {
     graphics.clear(); graphics.fillStyle(0x00a800, 1); graphics.fillRect(0, 0, 64, 96); graphics.lineStyle(3, 0x004d00); graphics.strokeRect(0, 0, 64, 96); graphics.generateTexture('pipe', 64, 96);
     graphics.clear(); graphics.fillStyle(0xffff00, 1); graphics.fillCircle(15, 15, 15); graphics.fillStyle(0xffffff, 0.8); graphics.fillCircle(10, 10, 5); graphics.generateTexture('coin', 30, 30);
     graphics.clear(); graphics.fillStyle(0x33cc33, 1); graphics.fillEllipse(24, 28, 48, 40); graphics.fillStyle(0xffffff, 1); graphics.fillCircle(14, 22, 6); graphics.fillCircle(30, 22, 6); graphics.fillStyle(0x000000, 1); graphics.fillCircle(16, 22, 3); graphics.fillCircle(32, 22, 3); graphics.generateTexture('slime', 48, 48);
-    graphics.clear(); graphics.fillStyle(0x553366, 1); graphics.fillTriangle(0, 24, 20, 0, 20, 24); graphics.fillTriangle(40, 24, 20, 0, 20, 24); graphics.fillStyle(0x7744aa, 1); graphics.fillCircle(20, 20, 10); graphics.generateTexture('bat', 40, 32);
     graphics.clear(); graphics.fillStyle(0xffa500, 1); graphics.fillCircle(10, 10, 10); graphics.generateTexture('fireball', 20, 20);
     graphics.clear(); graphics.fillStyle(0xff2244, 1); graphics.fillCircle(5, 5, 5); graphics.fillCircle(14, 5, 5); graphics.fillTriangle(0, 6, 19, 6, 9, 18); graphics.generateTexture('heart', 20, 18);
     graphics.destroy();
@@ -116,6 +118,12 @@ function create() {
         key: 'walk',
         frames: [{ key: 'dragon1' }, { key: 'dragon2' }, { key: 'dragon3' }, { key: 'dragon4' }, { key: 'dragon5' }],
         frameRate: 12, repeat: -1
+    });
+
+    this.anims.create({
+        key: 'cerebroVuelo',
+        frames: [{ key: 'cerebro1' }, { key: 'cerebro2' }, { key: 'cerebro3' }],
+        frameRate: 6, repeat: -1
     });
 
     this.physics.add.collider(player, platforms);
@@ -286,13 +294,14 @@ function construirMundoCueva() {
         currentX += islandWidth * 32 + Phaser.Math.Between(100, 200);
     }
     
-    // MÁS MURCIÉLAGOS POR TODO EL NIVEL
+    // NUEVOS CEREBROS ANIMADOS POR TODO EL NIVEL
     for (let m = 0; m < 15; m++) {
         let mx = Phaser.Math.Between(400, CAVE_WORLD_WIDTH - 400);
         let my = Phaser.Math.Between(100, 600);
-        let b = enemies.create(mx, my, 'bat');
-        b.body.allowGravity = false;
-        b.setData('esVolador', true);
+        let c = enemies.create(mx, my, 'cerebro1').setScale(0.12);
+        c.anims.play('cerebroVuelo');
+        c.body.allowGravity = false;
+        c.setData('esVolador', true);
     }
     
     pipes.create(CAVE_WORLD_WIDTH - 200, groundY - 48, 'pipe').setData('tipo', 'salir');
