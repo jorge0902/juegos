@@ -207,25 +207,14 @@ function update() {
     enemies.getChildren().forEach(e => {
         let dist = Phaser.Math.Distance.Between(player.x, player.y, e.x, e.y);
         if (dist < 400) {
-            // Persecución horizontal (todos los enemigos)
             e.setVelocityX(player.x < e.x ? -160 : 160);
-
-            // PERSECUCIÓN VERTICAL (solo murciélagos/voladores)
             if (e.getData('esVolador')) {
                 e.setVelocityY(player.y < e.y ? -120 : 120);
             }
         } else if (e.getData('esVolador')) {
-            // Si es volador y está lejos, se queda flotando/quieto
             e.setVelocityY(0);
         }
         e.setFlipX(e.body.velocity.x > 0);
-
-        // SALTO SINCRONIZADO PARA EL CUBO
-        if (e.anims.currentAnim && e.anims.currentAnim.key === 'cuboCaminar' && (e.body.touching.down || e.body.blocked.down)) {
-            if (e.anims.currentFrame && e.anims.currentFrame.index === 4) {
-                e.setVelocityY(-350);
-            }
-        }
     });
 }
 
