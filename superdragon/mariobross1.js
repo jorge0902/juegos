@@ -68,6 +68,10 @@ const CAVE_WORLD_WIDTH = 6400;
 // =====================================================================
 function preload() {
     for (let i = 1; i <= 5; i++) this.load.image(`dragon${i}`, `frames/${i}.png`);
+    this.load.image('cubo1', 'enemigos/1cubo.png');
+    this.load.image('cubo2', 'enemigos/2cubo.png');
+    this.load.image('cubo3', 'enemigos/3cubo.png');
+    this.load.image('cubo4', 'enemigos/4cubo.png');
     this.load.image('cieloAzul', 'cielo/Looped Sky Background.png');
     this.load.image('nubeImg', 'nubes 2/nube1.png');
     this.load.image('arbolesImg', 'fondo arboles 2/arboles.png');
@@ -88,7 +92,6 @@ function preload() {
     graphics.clear(); graphics.fillStyle(0x4d4d4d, 1); graphics.fillRect(0, 0, 32, 32); graphics.lineStyle(2, 0x222222); graphics.strokeRect(0, 0, 32, 32); graphics.generateTexture('rock', 32, 32);
     graphics.clear(); graphics.fillStyle(0x00a800, 1); graphics.fillRect(0, 0, 64, 96); graphics.lineStyle(3, 0x004d00); graphics.strokeRect(0, 0, 64, 96); graphics.generateTexture('pipe', 64, 96);
     graphics.clear(); graphics.fillStyle(0xffff00, 1); graphics.fillCircle(15, 15, 15); graphics.fillStyle(0xffffff, 0.8); graphics.fillCircle(10, 10, 5); graphics.generateTexture('coin', 30, 30);
-    graphics.clear(); graphics.fillStyle(0x33cc33, 1); graphics.fillEllipse(24, 28, 48, 40); graphics.fillStyle(0xffffff, 1); graphics.fillCircle(14, 22, 6); graphics.fillCircle(30, 22, 6); graphics.fillStyle(0x000000, 1); graphics.fillCircle(16, 22, 3); graphics.fillCircle(32, 22, 3); graphics.generateTexture('slime', 48, 48);
     graphics.clear(); graphics.fillStyle(0xffa500, 1); graphics.fillCircle(10, 10, 10); graphics.generateTexture('fireball', 20, 20);
     graphics.clear(); graphics.fillStyle(0xff2244, 1); graphics.fillCircle(5, 5, 5); graphics.fillCircle(14, 5, 5); graphics.fillTriangle(0, 6, 19, 6, 9, 18); graphics.generateTexture('heart', 20, 18);
     graphics.destroy();
@@ -123,6 +126,12 @@ function create() {
     this.anims.create({
         key: 'cerebroVuelo',
         frames: [{ key: 'cerebro1' }, { key: 'cerebro2' }, { key: 'cerebro3' }],
+        frameRate: 6, repeat: -1
+    });
+
+    this.anims.create({
+        key: 'cuboCaminar',
+        frames: [{ key: 'cubo1' }, { key: 'cubo2' }, { key: 'cubo3' }, { key: 'cubo4' }],
         frameRate: 6, repeat: -1
     });
 
@@ -210,6 +219,13 @@ function update() {
             e.setVelocityY(0);
         }
         e.setFlipX(e.body.velocity.x > 0);
+
+        // SALTO SINCRONIZADO PARA EL CUBO
+        if (e.texture.key === 'cubo1' && (e.body.touching.down || e.body.blocked.down)) {
+            if (e.anims.currentFrame && e.anims.currentFrame.index === 4) {
+                e.setVelocityY(-350);
+            }
+        }
     });
 }
 
@@ -235,7 +251,10 @@ function construirMundoExterior() {
             let px = currentX + i * 32 + 16;
             if (px > TOTAL_WORLD_WIDTH) break;
             platforms.create(px, groundY, 'brick');
-            if (currentX > 500 && Phaser.Math.Between(0, 100) > 95) { enemies.create(px, groundY - 40, 'slime'); }
+            if (currentX > 500 && Phaser.Math.Between(0, 100) > 95) { 
+                let c = enemies.create(px, groundY - 40, 'cubo1').setScale(0.12); 
+                c.anims.play('cuboCaminar');
+            }
             if (Phaser.Math.Between(0, 10) > 8) { crearMoneda(this, px, groundY - 100); }
         }
         currentX += islandWidth * 32 + Phaser.Math.Between(100, 250);
