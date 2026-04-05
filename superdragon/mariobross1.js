@@ -58,7 +58,7 @@ let heartsGroup;
 const SPEED_MAX = 300;
 const ACCELERATION = 600;
 const DRAG = 800;
-const JUMP_FORCE = -720;
+const JUMP_FORCE = -700;
 
 const TOTAL_WORLD_WIDTH = 12800;
 const CAVE_WORLD_WIDTH = 6400;
@@ -68,10 +68,10 @@ const CAVE_WORLD_WIDTH = 6400;
 // =====================================================================
 function preload() {
     for (let i = 1; i <= 5; i++) this.load.image(`dragon${i}`, `frames/${i}.png`);
-    this.load.image('cubo1', 'enemigos/1cubo.png');
-    this.load.image('cubo2', 'enemigos/2cubo.png');
-    this.load.image('cubo3', 'enemigos/3cubo.png');
-    this.load.image('cubo4', 'enemigos/4cubo.png');
+    this.load.image('cubo1', 'enemigos/cubo1.png');
+    this.load.image('cubo2', 'enemigos/cubo2.png');
+    this.load.image('cubo3', 'enemigos/cubo3.png');
+    this.load.image('cubo4', 'enemigos/cubo4.png');
     this.load.image('cieloAzul', 'cielo/Looped Sky Background.png');
     this.load.image('nubeImg', 'nubes 2/nube1.png');
     this.load.image('arbolesImg', 'fondo arboles 2/arboles.png');
@@ -206,9 +206,9 @@ function update() {
 
     enemies.getChildren().forEach(e => {
         let dist = Phaser.Math.Distance.Between(player.x, player.y, e.x, e.y);
-        if (dist < 400) { 
+        if (dist < 400) {
             // Persecución horizontal (todos los enemigos)
-            e.setVelocityX(player.x < e.x ? -160 : 160); 
+            e.setVelocityX(player.x < e.x ? -160 : 160);
 
             // PERSECUCIÓN VERTICAL (solo murciélagos/voladores)
             if (e.getData('esVolador')) {
@@ -221,7 +221,7 @@ function update() {
         e.setFlipX(e.body.velocity.x > 0);
 
         // SALTO SINCRONIZADO PARA EL CUBO
-        if (e.texture.key === 'cubo1' && (e.body.touching.down || e.body.blocked.down)) {
+        if (e.anims.currentAnim && e.anims.currentAnim.key === 'cuboCaminar' && (e.body.touching.down || e.body.blocked.down)) {
             if (e.anims.currentFrame && e.anims.currentFrame.index === 4) {
                 e.setVelocityY(-350);
             }
@@ -251,8 +251,8 @@ function construirMundoExterior() {
             let px = currentX + i * 32 + 16;
             if (px > TOTAL_WORLD_WIDTH) break;
             platforms.create(px, groundY, 'brick');
-            if (currentX > 500 && Phaser.Math.Between(0, 100) > 95) { 
-                let c = enemies.create(px, groundY - 40, 'cubo1').setScale(0.12); 
+            if (currentX > 500 && Phaser.Math.Between(0, 100) > 95) {
+                let c = enemies.create(px, groundY - 40, 'cubo1').setScale(0.12);
                 c.anims.play('cuboCaminar');
             }
             if (Phaser.Math.Between(0, 10) > 8) { crearMoneda(this, px, groundY - 100); }
@@ -277,17 +277,17 @@ function construirMundoCueva() {
     if (fondoCueva2) fondoCueva2.setVisible(true);
 
     this.cameras.main.setBackgroundColor('#000000');
-    
+
     // CAPA 1: Fondo profundo (se mueve más lento)
-    if (!fondoCueva2) { 
-        fondoCueva2 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva2').setOrigin(0, 0).setScrollFactor(0.2).setDepth(-6).setAlpha(0.6); 
+    if (!fondoCueva2) {
+        fondoCueva2 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva2').setOrigin(0, 0).setScrollFactor(0.2).setDepth(-6).setAlpha(0.6);
     }
-    
+
     // CAPA 2: Fondo cercano
-    if (!fondoCueva1) { 
-        fondoCueva1 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva1').setOrigin(0, 0).setScrollFactor(0.5).setDepth(-5); 
+    if (!fondoCueva1) {
+        fondoCueva1 = this.add.tileSprite(0, 0, CAVE_WORLD_WIDTH, 1080, 'fCueva1').setOrigin(0, 0).setScrollFactor(0.5).setDepth(-5);
     }
-    
+
     let currentX = 0; let groundY = 850;
     while (currentX < CAVE_WORLD_WIDTH) {
         if (Phaser.Math.Between(0, 100) > 80) { groundY = Phaser.Math.Clamp(groundY + Phaser.Math.Between(-2, 2) * 32, 700, 950); }
@@ -312,7 +312,7 @@ function construirMundoCueva() {
 
         currentX += islandWidth * 32 + Phaser.Math.Between(100, 200);
     }
-    
+
     // NUEVOS CEREBROS ANIMADOS POR TODO EL NIVEL
     for (let m = 0; m < 15; m++) {
         let mx = Phaser.Math.Between(400, CAVE_WORLD_WIDTH - 400);
@@ -322,7 +322,7 @@ function construirMundoCueva() {
         c.body.allowGravity = false;
         c.setData('esVolador', true);
     }
-    
+
     pipes.create(CAVE_WORLD_WIDTH - 200, groundY - 48, 'pipe').setData('tipo', 'salir');
 }
 
