@@ -309,6 +309,7 @@ function construirMundoCueva() {
         let mx = Phaser.Math.Between(400, CAVE_WORLD_WIDTH - 400);
         let my = Phaser.Math.Between(100, 600);
         let c = enemies.create(mx, my, 'cerebro1').setScale(0.12);
+        c.anims.play('cerebroVuelo');
         c.body.allowGravity = false;
         c.setData('esVolador', true);
     }
