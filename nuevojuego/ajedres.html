@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Ajedrez HTML5</title>
+    <style>
+        :root {
+            --bg-light: #f0d9b5;
+            --bg-dark: #b58863;
+            --highlight: rgba(255, 255, 0, 0.5);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        h1 { margin-bottom: 10px; }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            border: 5px solid #34495e;
+            user-select: none;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+        }
+
+        .square.light { background-color: var(--bg-light); }
+        .square.dark { background-color: var(--bg-dark); }
+
+        .square.selected { background-color: var(--highlight) !important; }
+
+        .piece {
+            transition: transform 0.1s;
+        }
+
+        .piece:active { transform: scale(1.1); }
+
+        #info {
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Ajedrez Simple</h1>
+    <div id="board"></div>
+    <div id="info">Turno de: <span id="turn">Blancas</span></div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const turnDisplay = document.getElementById('turn');
+        
+        // Estado inicial del tablero
+        const initialBoard = [
+            ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+            ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+            ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+        ];
+
+        let selectedSquare = null;
+        let turn = 'white'; // 'white' o 'black'
+
+        // Crear el tablero en el HTML
+        function createBoard() {
+            boardElement.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    square.classList.add((r + c) % 2 === 0 ? 'light' : 'dark');
+                    square.dataset.row = r;
+                    square.dataset.col = c;
+                    
+                    const piece = initialBoard[r][c];
+                    if (piece) {
+                        square.textContent = piece;
+                        square.classList.add(getPieceColor(piece));
+                    }
+
+                    square.addEventListener('click', () => handleSquareClick(r, c));
+                    boardElement.appendChild(square);
+                }
+            }
+        }
+
+        function getPieceColor(piece) {
+            const whitePieces = ['♖', '♘', '♗', '♕', '♔', '♙'];
+            return whitePieces.includes(piece) ? 'white' : 'black';
+        }
+
+        function handleSquareClick(r, c) {
+            const piece = initialBoard[r][c];
+
+            // Si ya hay una pieza seleccionada
+            if (selectedSquare) {
+                const [prevR, prevC] = selectedSquare;
+
+                // Si haces clic en la misma casilla, deseleccionas
+                if (prevR === r && prevC === c) {
+                    selectedSquare = null;
+                    render();
+                    return;
+                }
+
+                // Mover pieza (Lógica simplificada: sin validación de reglas de ajedrez reales)
+                movePiece(prevR, prevC, r, c);
+                selectedSquare = null;
+                render();
+            } else {
+                // Seleccionar pieza si es el turno correcto
+                if (piece && getPieceColor(piece) === turn) {
+                    selectedSquare = [r, c];
+                    render();
+                }
+            }
+        }
+
+        function movePiece(fromR, fromC, toR, toC) {
+            const piece = initialBoard[fromR][fromC];
+            initialBoard[toR][toC] = piece;
+            initialBoard[fromR][fromC] = '';
+            
+            // Cambiar turno
+            turn = turn === 'white' ? 'black' : 'white';
+            turnDisplay.textContent = turn === 'white' ? 'Blancas' : 'Negras';
+        }
+
+        function render() {
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(sq => {
+                const r = parseInt(sq.dataset.row);
+                const c = parseInt(sq.dataset.col);
+                sq.textContent = initialBoard[r][c];
+                sq.classList.remove('selected');
+
+                if (selectedSquare && selectedSquare[0] === r && selectedSquare[1] === c) {
+                    sq.classList.add('selected');
+                }
+            });
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahorcado Animado</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #ecf0f1;
+            padding: 20px;
+            transition: background 0.5s;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        #canvas {
+            background: #f9f9f9;
+            border-bottom: 3px solid #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        /* Partes del cuerpo ocultas */
+        .draw { display: none; stroke: black; stroke-width: 3; fill: none; }
+        #face { display: none; fill: black; font-size: 14px; }
+
+        .word-display {
+            font-size: 2rem;
+            letter-spacing: 0.3rem;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
+            gap: 5px;
+        }
+
+        .key {
+            padding: 8px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            background: #eee;
+            font-weight: bold;
+        }
+
+        .key:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* --- ANIMACIONES --- */
+        @keyframes dance {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        /* Clases que aplica JS al final */
+        .win-bg { background-color: #d4edda !important; }
+        .lose-bg { background-color: #f8d7da !important; }
+        .win-anim #stickman-group { animation: dance 0.6s infinite; }
+        .lose-anim #canvas { animation: shake 0.2s 3; }
+
+        #setup-area { margin-bottom: 20px; }
+        #game-area { display: none; }
+    </style>
+</head>
+<body id="main-body">
+
+    <div class="container" id="main-card">
+        <h1>💀 Ahorcado 💀</h1>
+
+        <div id="setup-area">
+            <input type="password" id="secret-word" placeholder="Escribe la palabra..." style="padding:10px; width:60%">
+            <button onclick="startGame()" style="padding:10px; cursor:pointer">Empezar</button>
+        </div>
+
+        <div id="game-area">
+            <svg id="canvas" width="200" height="220">
+                <line x1="20" y1="200" x2="180" y2="200" stroke="#2c3e50" stroke-width="4"/>
+                <line x1="60" y1="200" x2="60" y2="20" stroke="#2c3e50" stroke-width="4"/>
+                <line x1="60" y1="20" x2="140" y2="20" stroke="#2c3e50" stroke-width="4"/>
+                <line id="rope" x1="140" y1="20" x2="140" y2="50" stroke="#a67c52" stroke-width="2"/>
+                
+                <g id="stickman-group">
+                    <circle id="head" class="draw" cx="140" cy="70" r="20"/>
+                    <line id="body-line" class="draw" x1="140" y1="90" x2="140" y2="150"/>
+                    <line id="arm-l" class="draw" x1="140" y1="110" x2="110" y2="90"/>
+                    <line id="arm-r" class="draw" x1="140" y1="110" x2="170" y2="90"/>
+                    <line id="leg-l" class="draw" x1="140" y1="150" x2="120" y2="180"/>
+                    <line id="leg-r" class="draw" x1="140" y1="150" x2="160" y2="180"/>
+                    <text id="face" x="133" y="75">o_o</text>
+                </g>
+            </svg>
+
+            <div class="word-display" id="word-display"></div>
+            <div id="msg" style="font-weight:bold; margin-bottom:10px"></div>
+            <div class="keyboard" id="keyboard"></div>
+            <br>
+            <button onclick="location.reload()">Reiniciar</button>
+        </div>
+    </div>
+
+    <script>
+        let palabra = "";
+        let letrasAdivinadas = [];
+        let fallos = 0;
+        const partes = ['head', 'body-line', 'arm-l', 'arm-r', 'leg-l', 'leg-r'];
+
+        function startGame() {
+            const input = document.getElementById('secret-word');
+            palabra = input.value.trim().toUpperCase();
+            
+            if (palabra.length < 1) return alert("Escribe algo");
+
+            document.getElementById('setup-area').style.display = 'none';
+            document.getElementById('game-area').style.display = 'block';
+            
+            renderWord();
+            renderKeyboard();
+        }
+
+        function renderKeyboard() {
+            const letras = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+            const contenedor = document.getElementById('keyboard');
+            contenedor.innerHTML = '';
+            letras.split('').forEach(l => {
+                const b = document.createElement('button');
+                b.innerText = l;
+                b.className = 'key';
+                b.onclick = () => intentar(l, b);
+                contenedor.appendChild(b);
+            });
+        }
+
+        function intentar(letra, boton) {
+            boton.disabled = true;
+            if (palabra.includes(letra)) {
+                letrasAdivinadas.push(letra);
+            } else {
+                fallos++;
+                if (fallos <= partes.length) {
+                    document.getElementById(partes[fallos-1]).style.display = 'block';
+                    document.getElementById('face').style.display = 'block';
+                }
+                actualizarCara();
+            }
+            renderWord();
+            checkFinal();
+        }
+
+        function actualizarCara() {
+            const f = document.getElementById('face');
+            if (fallos === 3) f.textContent = "ò_ó";
+            if (fallos === 5) f.textContent = ">_<";
+            if (fallos >= 6) f.textContent = "x_x";
+        }
+
+        function renderWord() {
+            const display = palabra.split('').map(l => letrasAdivinadas.includes(l) ? l : "_").join(' ');
+            document.getElementById('word-display').innerText = display;
+        }
+
+        function checkFinal() {
+            const win = palabra.split('').every(l => letrasAdivinadas.includes(l));
+            const msg = document.getElementById('msg');
+            const body = document.getElementById('main-body');
+            const card = document.getElementById('main-card');
+
+            if (win) {
+                msg.innerText = "¡GANASTE! 🎉";
+                msg.style.color = "green";
+                body.classList.add('win-bg');
+                card.classList.add('win-anim');
+                document.getElementById('face').textContent = "^‿^";
+                document.getElementById('rope').style.display = 'none'; // Se suelta
+                bloquear();
+            } else if (fallos >= 6) {
+                msg.innerText = "PERDISTE. Era: " + palabra;
+                msg.style.color = "red";
+                body.classList.add('lose-bg');
+                card.classList.add('lose-anim');
+                bloquear();
+            }
+        }
+
+        function bloquear() {
+            const btns = document.querySelectorAll('.key');
+            btns.forEach(b => b.disabled = true);
+        }
+    </script>
+</body>
+</html>

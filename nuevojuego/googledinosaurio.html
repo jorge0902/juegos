@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐉 DRAGON RUNNER ULTRA - Enhanced Edition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            margin: 0; overflow: hidden; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; font-family: 'Arial', sans-serif;
+        }
+        .game-wrapper { position: relative; display: inline-block; }
+        canvas { 
+            background: #87CEEB; border: 5px solid #fff; 
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4), 0 0 80px rgba(255, 140, 0, 0.2);
+            border-radius: 10px; cursor: pointer;
+        }
+        .hud { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 100; }
+        .hud-panel { background: rgba(0, 0, 0, 0.8); padding: 15px 25px; border-radius: 15px; color: white; font-weight: bold; backdrop-filter: blur(10px); border: 2px solid rgba(255, 215, 0, 0.5); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
+        .score-display { font-size: 28px; color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); margin-bottom: 5px; }
+        .high-score { font-size: 14px; color: #FFA500; opacity: 0.9; }
+        .coins { font-size: 24px; color: #FFD700; }
+        .lives-container { display: flex; gap: 8px; align-items: center; }
+        .heart { font-size: 28px; filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.6)); animation: heartbeat 1.5s infinite; }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .power-ups-bar { position: absolute; bottom: 20px; left: 20px; display: flex; gap: 12px; pointer-events: none; }
+        .power-up-slot { width: 60px; height: 60px; background: rgba(0, 0, 0, 0.8); border: 3px solid rgba(255, 215, 0, 0.6); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 32px; position: relative; backdrop-filter: blur(10px); }
+        .power-up-slot.active { animation: glowPulse 1s infinite; border-color: #FFD700; }
+        @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); transform: scale(1); } 50% { box-shadow: 0 0 30px rgba(255, 215, 0, 1); transform: scale(1.05); } }
+        .game-over-screen { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; border-radius: 10px; }
+        .game-over-screen.show { display: flex; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .game-over-title { font-size: 64px; color: #FF4444; text-shadow: 0 0 20px rgba(255, 68, 68, 0.8); margin-bottom: 30px; animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .final-stats { background: rgba(255, 255, 255, 0.1); padding: 30px; border-radius: 15px; margin-bottom: 30px; min-width: 300px; border: 2px solid rgba(255, 215, 0, 0.5); }
+        .stat-line { color: white; font-size: 20px; margin: 10px 0; display: flex; justify-content: space-between; }
+        .stat-value { color: #FFD700; font-weight: bold; }
+        .restart-btn { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000; font-size: 24px; font-weight: bold; padding: 15px 50px; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 25px rgba(255, 215, 0, 0.5); transition: all 0.3s; pointer-events: auto; }
+        .restart-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(255, 215, 0, 0.8); }
+        .instructions { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.9); padding: 40px; border-radius: 20px; border: 3px solid #FFD700; color: white; text-align: center; max-width: 500px; z-index: 300; }
+        .instructions.hidden { display: none; }
+        .instructions h2 { color: #FFD700; font-size: 36px; margin-bottom: 20px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        .instructions p { font-size: 18px; margin: 15px 0; line-height: 1.6; }
+        .instructions .controls { background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .start-btn { background: linear-gradient(135deg, #00FF00 0%, #00AA00 100%); color: white; font-size: 28px; font-weight: bold; padding: 20px 60px; border: none; border-radius: 50px; cursor: pointer; margin-top: 20px; box-shadow: 0 5px 25px rgba(0, 255, 0, 0.5); transition: all 0.3s; }
+        .start-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 35px rgba(0, 255, 0, 0.8); }
+        .combo-display { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); font-size: 48px; font-weight: bold; color: #FFD700; text-shadow: 0 0 20px rgba(255, 215, 0, 1); opacity: 0; pointer-events: none; z-index: 150; }
+        .combo-display.show { animation: comboPopup 1s; }
+        @keyframes comboPopup { 0% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.5); } 20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.2); } 80% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } 100% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.8); } }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="hud">
+        <div class="hud-panel">
+            <div class="score-display">🏆 <span id="score">0</span></div>
+            <div class="high-score">Récord: <span id="highScore">0</span></div>
+            <div class="coins">💰 <span id="coins">0</span></div>
+        </div>
+        <div class="hud-panel">
+            <div class="lives-container" id="livesContainer">
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="power-ups-bar" id="powerUpsBar">
+        <div class="power-up-slot" id="shieldSlot" title="Escudo">🛡️</div>
+        <div class="power-up-slot" id="speedSlot" title="Velocidad">⚡</div>
+        <div class="power-up-slot" id="magnetSlot" title="Imán">🧲</div>
+    </div>
+
+    <div class="combo-display" id="comboDisplay"></div>
+
+    <div class="game-over-screen" id="gameOverScreen">
+        <div class="game-over-title">💀 GAME OVER 💀</div>
+        <div class="final-stats">
+            <div class="stat-line"><span>Puntuación:</span><span class="stat-value" id="finalScore">0</span></div>
+            <div class="stat-line"><span>Monedas:</span><span class="stat-value" id="finalCoins">0</span></div>
+            <div class="stat-line"><span>Distancia:</span><span class="stat-value" id="finalDistance">0m</span></div>
+            <div class="stat-line"><span>Mejor Combo:</span><span class="stat-value" id="finalCombo">0x</span></div>
+        </div>
+        <button class="restart-btn" onclick="restartGame()">🔄 JUGAR DE NUEVO</button>
+    </div>
+
+    <div class="instructions" id="instructions">
+        <h2>🐉 DRAGON RUNNER ULTRA</h2>
+        <p>¡Ayuda al dragón a sobrevivir en esta aventura épica!</p>
+        <div class="controls">
+            <p><strong>⌨️ CONTROLES:</strong></p>
+            <p>🔼 ESPACIO / ↑ / CLICK - Saltar</p>
+            <p>🔽 ↓ - Agacharse (volar bajo)</p>
+        </div>
+        <button class="start-btn" onclick="startGame()">🚀 COMENZAR</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = 1000;
+canvas.height = 500;
+
+// ========== CARGAR IMÁGENES DEL DRAGÓN ==========
+const dragonFrames = [];
+for (let i = 1; i <= 5; i++) {
+    const img = new Image();
+    img.src = i + '.png'; 
+    dragonFrames.push(img);
+}
+
+// ========== VARIABLES GLOBALES ==========
+let gameStarted = false;
+let gameOver = false;
+let score = 0;
+let coins = 0;
+let lives = 3;
+let highScore = localStorage.getItem('dragonHighScore') || 0;
+let distance = 0;
+let combo = 0;
+let maxCombo = 0;
+let scrollX = 0;
+let gameSpeed = 4;
+let time = 0;
+
+// ¡DRAGÓN ACTUALIZADO!
+const dragon = {
+    x: 120,
+    y: 300,
+    width: 110,     // Más grande (antes 80)
+    height: 110,    // Más grande (antes 80)
+    dy: 0,
+    jumpForce: 16.5, // Salta más fuerte/alto (antes 14)
+    gravity: 0.8,    // Cae un poco más rápido para dar sensación de peso (antes 0.65)
+    isGrounded: false,
+    isDucking: false,
+    invincible: false,
+    invincibleTimer: 0,
+    frame: 0,
+    frameTimer: 0
+};
+
+// Power-ups activos
+const activePowerUps = { shield: false, shieldTimer: 0, speed: false, speedTimer: 0, magnet: false, magnetTimer: 0 };
+let particles = []; let enemies = []; let collectibles = []; let clouds = []; let stars = [];
+let skyState = { time: 0, phase: 'day' };
+
+// ========== SISTEMA DE PARTÍCULAS ==========
+class Particle {
+    constructor(x, y, color, size, vx, vy, life) {
+        this.x = x; this.y = y; this.color = color; this.size = size; this.vx = vx; this.vy = vy; this.life = life; this.maxLife = life; this.alpha = 1;
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life--; this.alpha = this.life / this.maxLife; }
+    draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+    isDead() { return this.life <= 0; }
+}
+
+// ========== ENEMIGOS ==========
+class Enemy {
+    constructor(x, y, type) {
+        this.x = x; this.y = y; this.type = type; this.width = 60; this.height = 50; this.speed = 3 + Math.random() * 2; this.amplitude = 30; this.frequency = 0.05; this.phase = Math.random() * Math.PI * 2; this.removed = false;
+    }
+    update() { this.x -= this.speed + (activePowerUps.speed ? 3 : 0); this.y += Math.sin(time * this.frequency + this.phase) * 2; if (this.x + this.width < 0) { this.removed = true; } }
+    draw() {
+        ctx.save(); ctx.font = `${this.height}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3;
+        ctx.fillText('🦅', this.x + this.width / 2, this.y + this.height / 2); ctx.restore();
+    }
+    collidesWith(obj) { return this.x < obj.x + obj.width && this.x + this.width > obj.x && this.y < obj.y + obj.height && this.y + this.height > obj.y; }
+}
+
+// ========== COLECCIONABLES ==========
+class Collectible {
+    constructor(x, y, type) {
+        this.x = x; this.y = y; this.type = type; this.width = 40; this.height = 40; this.speed = 4; this.bobPhase = Math.random() * Math.PI * 2; this.collected = false; this.removed = false;
+    }
+    update() {
+        this.x -= this.speed + (activePowerUps.speed ? 3 : 0); this.bobPhase += 0.1;
+        if (activePowerUps.magnet && this.type === 'coin') {
+            const dx = dragon.x - this.x; const dy = dragon.y - this.y; const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 200) { this.x += dx * 0.1; this.y += dy * 0.1; }
+        }
+        if (this.x + this.width < 0) { this.removed = true; }
+    }
+    draw() {
+        ctx.save(); const bobOffset = Math.sin(this.bobPhase) * 5; const emoji = this.getEmoji();
+        ctx.shadowColor = this.getGlowColor(); ctx.shadowBlur = 15;
+        ctx.font = `${this.height}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(emoji, this.x + this.width / 2, this.y + this.height / 2 + bobOffset); ctx.restore();
+    }
+    getEmoji() { switch(this.type) { case 'coin': return '💰'; case 'shield': return '🛡️'; case 'speed': return '⚡'; case 'magnet': return '🧲'; default: return '💎'; } }
+    getGlowColor() { switch(this.type) { case 'coin': return 'rgba(255, 215, 0, 0.8)'; case 'shield': return 'rgba(0, 150, 255, 0.8)'; case 'speed': return 'rgba(255, 255, 0, 0.8)'; case 'magnet': return 'rgba(255, 0, 255, 0.8)'; default: return 'rgba(255, 255, 255, 0.8)'; } }
+    collidesWith(obj) { return this.x < obj.x + obj.width && this.x + this.width > obj.x && this.y < obj.y + obj.height && this.y + this.height > obj.y; }
+}
+
+class Cloud {
+    constructor() { this.x = canvas.width + Math.random() * 200; this.y = Math.random() * 200; this.speed = 0.5 + Math.random() * 1; this.size = 40 + Math.random() * 40; this.opacity = 0.3 + Math.random() * 0.4; }
+    update() { this.x -= this.speed; if (this.x + this.size < 0) { this.x = canvas.width + 100; this.y = Math.random() * 200; } }
+    draw() {
+        ctx.save(); ctx.globalAlpha = this.opacity; ctx.fillStyle = 'white'; ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 0.5, 0, Math.PI * 2); ctx.arc(this.x + this.size * 0.4, this.y, this.size * 0.4, 0, Math.PI * 2); ctx.arc(this.x + this.size * 0.8, this.y, this.size * 0.5, 0, Math.PI * 2);
+        ctx.fill(); ctx.restore();
+    }
+}
+class Star {
+    constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * 300; this.size = 1 + Math.random() * 2; this.twinkleSpeed = 0.02 + Math.random() * 0.03; this.twinklePhase = Math.random() * Math.PI * 2; this.brightness = 0.5; }
+    update() { this.twinklePhase += this.twinkleSpeed; this.brightness = 0.5 + Math.sin(this.twinklePhase) * 0.5; }
+    draw() { ctx.save(); ctx.globalAlpha = this.brightness; ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+}
+
+// ========== INICIALIZACIÓN ==========
+function init() {
+    for (let i = 0; i < 5; i++) { clouds.push(new Cloud()); }
+    for (let i = 0; i < 100; i++) { stars.push(new Star()); }
+    document.getElementById('highScore').textContent = highScore;
+}
+
+// ========== SISTEMA DE CICLO DÍA/NOCHE ==========
+function getSkyColor() {
+    const t = (time % 3000) / 3000;
+    if (t < 0.25) { return { top: '#87CEEB', bottom: '#B0E0E6', phase: 'day' }; } 
+    else if (t < 0.375) { const progress = (t - 0.25) / 0.125; return { top: lerpColor('#87CEEB', '#FF6B6B', progress), bottom: lerpColor('#B0E0E6', '#FFA500', progress), phase: 'sunset' }; } 
+    else if (t < 0.75) { return { top: '#0a1128', bottom: '#1a2332', phase: 'night' }; } 
+    else { const progress = (t - 0.75) / 0.25; return { top: lerpColor('#0a1128', '#87CEEB', progress), bottom: lerpColor('#1a2332', '#B0E0E6', progress), phase: 'sunrise' }; }
+}
+function lerpColor(color1, color2, t) {
+    const c1 = hexToRgb(color1); const c2 = hexToRgb(color2);
+    const r = Math.round(c1.r + (c2.r - c1.r) * t); const g = Math.round(c1.g + (c2.g - c1.g) * t); const b = Math.round(c1.b + (c2.b - c1.b) * t); return `rgb(${r}, ${g}, ${b})`;
+}
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
+}
+
+function spawnEnemy() { const y = 150 + Math.random() * 150; enemies.push(new Enemy(canvas.width, y, 'eagle')); }
+function spawnCollectible() {
+    const types = ['coin', 'coin', 'coin', 'coin', 'shield', 'speed', 'magnet'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const y = 200 + Math.random() * 150;
+    collectibles.push(new Collectible(canvas.width, y, type));
+}
+
+function createDragonParticles() {
+    if (Math.random() < 0.3) {
+        const colors = ['#FF4500', '#FF6347', '#FFA500', '#FFD700'];
+        particles.push(new Particle(dragon.x + 20, dragon.y + dragon.height / 2, colors[Math.floor(Math.random() * colors.length)], 3 + Math.random() * 4, -2 - Math.random() * 2, -1 + Math.random() * 2, 20 + Math.random() * 20));
+    }
+}
+function createExplosion(x, y, color, count = 15) {
+    for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i; const speed = 2 + Math.random() * 3;
+        particles.push(new Particle(x, y, color, 3 + Math.random() * 5, Math.cos(angle) * speed, Math.sin(angle) * speed, 30 + Math.random() * 20));
+    }
+}
+
+// ========== COLISIONES ==========
+function checkCollisions() {
+    for (let enemy of enemies) {
+        if (!enemy.removed && enemy.collidesWith(dragon)) {
+            if (activePowerUps.shield) {
+                enemy.removed = true; createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, '#00BFFF');
+                activePowerUps.shield = false; updatePowerUpUI();
+            } else if (!dragon.invincible) {
+                lives--; updateLivesUI(); dragon.invincible = true; dragon.invincibleTimer = 120;
+                createExplosion(dragon.x + dragon.width / 2, dragon.y + dragon.height / 2, '#FF0000');
+                if (lives <= 0) { endGame(); }
+            }
+            enemy.removed = true;
+        }
+    }
+    for (let item of collectibles) {
+        if (!item.collected && item.collidesWith(dragon)) {
+            item.collected = true; item.removed = true; collectItem(item);
+        }
+    }
+}
+
+function collectItem(item) {
+    createExplosion(item.x + item.width / 2, item.y + item.height / 2, item.getGlowColor(), 10);
+    switch(item.type) {
+        case 'coin':
+            coins++; combo++; score += 10 * combo; if (combo > maxCombo) maxCombo = combo;
+            if (combo >= 5) { showComboText(`${combo}x COMBO!`); } break;
+        case 'shield': activePowerUps.shield = true; activePowerUps.shieldTimer = 600; score += 50; break;
+        case 'speed': activePowerUps.speed = true; activePowerUps.speedTimer = 450; score += 50; break;
+        case 'magnet': activePowerUps.magnet = true; activePowerUps.magnetTimer = 600; score += 50; break;
+    }
+    updateUI(); updatePowerUpUI();
+}
+
+function showComboText(text) {
+    const comboEl = document.getElementById('comboDisplay');
+    comboEl.textContent = text; comboEl.classList.remove('show'); void comboEl.offsetWidth; comboEl.classList.add('show');
+}
+
+// ========== ACTUALIZACIÓN ==========
+function update() {
+    if (!gameStarted || gameOver) return;
+    time++; distance += 0.1; score += 1;
+    if (time % 600 === 0) { gameSpeed = Math.min(gameSpeed + 0.5, 12); }
+
+    // Física del dragón
+    if (!dragon.isGrounded) { dragon.dy += dragon.gravity; dragon.y += dragon.dy; }
+
+    // El suelo físico del juego siempre está en 400.
+    const groundLevel = 400 - dragon.height; 
+    if (dragon.y >= groundLevel) { dragon.y = groundLevel; dragon.dy = 0; dragon.isGrounded = true; }
+
+    if (dragon.invincible) { dragon.invincibleTimer--; if (dragon.invincibleTimer <= 0) { dragon.invincible = false; } }
+
+    dragon.frameTimer++;
+    let animSpeed = Math.max(2, 6 - Math.floor(gameSpeed / 2)); 
+    if (dragon.frameTimer > animSpeed) {
+        dragon.frameTimer = 0;
+        if (dragon.isGrounded) {
+            dragon.frame = (dragon.frame + 1) % 5;
+        } else {
+            dragon.frame = 1; 
+        }
+    }
+
+    updatePowerUps(); scrollX += gameSpeed; createDragonParticles();
+
+    particles = particles.filter(p => { p.update(); return !p.isDead(); });
+    enemies.forEach(e => e.update()); enemies = enemies.filter(e => !e.removed);
+    collectibles.forEach(c => c.update()); collectibles = collectibles.filter(c => !c.removed);
+    clouds.forEach(c => c.update()); stars.forEach(s => s.update());
+
+    if (time % 120 === 0 && Math.random() < 0.7) { spawnEnemy(); }
+    if (time % 90 === 0) { spawnCollectible(); }
+
+    checkCollisions(); if (time % 30 === 0) { updateUI(); }
+}
+
+function updatePowerUps() {
+    if (activePowerUps.shield) { activePowerUps.shieldTimer--; if (activePowerUps.shieldTimer <= 0) { activePowerUps.shield = false; } }
+    if (activePowerUps.speed) { activePowerUps.speedTimer--; if (activePowerUps.speedTimer <= 0) { activePowerUps.speed = false; } }
+    if (activePowerUps.magnet) { activePowerUps.magnetTimer--; if (activePowerUps.magnetTimer <= 0) { activePowerUps.magnet = false; } }
+    updatePowerUpUI();
+}
+
+// ========== DIBUJO ==========
+function draw() {
+    const sky = getSkyColor(); const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, sky.top); gradient.addColorStop(1, sky.bottom);
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (sky.phase === 'night' || sky.phase === 'sunrise') {
+        const alpha = sky.phase === 'night' ? 1 : 1 - ((time % 3000) / 3000 - 0.75) / 0.25;
+        ctx.save(); ctx.globalAlpha = alpha; stars.forEach(s => s.draw()); ctx.restore();
+    }
+
+    clouds.forEach(c => c.draw());
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(0, 400, canvas.width, 100);
+    ctx.fillStyle = '#228B22'; ctx.fillRect(0, 400, canvas.width, 10);
+    ctx.strokeStyle = '#654321'; ctx.lineWidth = 2;
+    for (let i = 0; i < canvas.width; i += 50) {
+        const x = (i - (scrollX % 50)); ctx.beginPath(); ctx.moveTo(x, 400); ctx.lineTo(x, 500); ctx.stroke();
+    }
+
+    particles.forEach(p => p.draw()); collectibles.forEach(c => c.draw()); enemies.forEach(e => e.draw());
+    
+    drawDragon();
+}
+
+// ¡DIBUJADO ANTI-DISTORSIÓN!
+function drawDragon() {
+    ctx.save();
+    
+    if (dragon.invincible && Math.floor(time / 5) % 2 === 0) { ctx.globalAlpha = 0.3; }
+
+    if (activePowerUps.shield) {
+        ctx.strokeStyle = '#00BFFF'; ctx.lineWidth = 4; ctx.shadowColor = '#00BFFF'; ctx.shadowBlur = 20;
+        ctx.beginPath(); ctx.arc(dragon.x + dragon.width / 2, dragon.y + dragon.height / 2, dragon.width / 2 + 10, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5;
+    
+    const img = dragonFrames[dragon.frame];
+    
+    // Verificamos que la imagen exista y se haya cargado
+    if (img && img.complete && img.naturalWidth > 0) {
+        
+        // Calcular la proporción original (Aspect Ratio)
+        const ratio = img.naturalWidth / img.naturalHeight;
+        
+        let drawWidth = dragon.width;
+        let drawHeight = dragon.width / ratio;
+        
+        // Si al hacer la conversión queda más alto que la hitbox, lo reajustamos en base al alto
+        if (drawHeight > dragon.height && !dragon.isDucking) {
+            drawHeight = dragon.height;
+            drawWidth = dragon.height * ratio;
+        }
+
+        // Centrar visualmente la imagen para que coincida con la caja física
+        const offsetX = dragon.x + (dragon.width - drawWidth) / 2;
+        // Alinear los pies para que siempre toquen el suelo
+        const offsetY = dragon.y + (dragon.height - drawHeight);
+
+        // ¡Se dibuja con sus proporciones originales perfectas!
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    }
+    
+    ctx.restore();
+}
+
+// ========== UI ==========
+function updateUI() { document.getElementById('score').textContent = Math.floor(score); document.getElementById('coins').textContent = coins; document.getElementById('highScore').textContent = highScore; }
+function updateLivesUI() {
+    const container = document.getElementById('livesContainer'); container.innerHTML = '';
+    for (let i = 0; i < lives; i++) { const heart = document.createElement('span'); heart.className = 'heart'; heart.textContent = '❤️'; container.appendChild(heart); }
+}
+function updatePowerUpUI() {
+    document.getElementById('shieldSlot').classList.toggle('active', activePowerUps.shield); document.getElementById('speedSlot').classList.toggle('active', activePowerUps.speed); document.getElementById('magnetSlot').classList.toggle('active', activePowerUps.magnet);
+}
+
+// ========== GAME OVER ==========
+function endGame() {
+    gameOver = true;
+    if (score > highScore) { highScore = Math.floor(score); localStorage.setItem('dragonHighScore', highScore); }
+    document.getElementById('finalScore').textContent = Math.floor(score); document.getElementById('finalCoins').textContent = coins; document.getElementById('finalDistance').textContent = Math.floor(distance) + 'm'; document.getElementById('finalCombo').textContent = maxCombo + 'x';
+    document.getElementById('gameOverScreen').classList.add('show');
+}
+function restartGame() {
+    gameOver = false; score = 0; coins = 0; lives = 3; distance = 0; combo = 0; maxCombo = 0; time = 0; gameSpeed = 4;
+    dragon.y = 300; dragon.dy = 0; dragon.isGrounded = false; dragon.isDucking = false; dragon.invincible = false;
+    activePowerUps.shield = false; activePowerUps.speed = false; activePowerUps.magnet = false;
+    particles = []; enemies = []; collectibles = [];
+    updateUI(); updateLivesUI(); updatePowerUpUI();
+    document.getElementById('gameOverScreen').classList.remove('show');
+}
+function startGame() { gameStarted = true; document.getElementById('instructions').classList.add('hidden'); }
+
+// ========== CONTROLES ==========
+window.addEventListener('keydown', (e) => {
+    if (!gameStarted || gameOver) return;
+    if ((e.code === 'Space' || e.code === 'ArrowUp') && dragon.isGrounded) {
+        dragon.dy = -dragon.jumpForce; dragon.isGrounded = false; dragon.isDucking = false;
+        createExplosion(dragon.x + dragon.width / 2, dragon.y + dragon.height, '#FFD700', 8);
+    }
+    // Al agacharse, reduce su altura a la mitad para esquivar
+    if (e.code === 'ArrowDown') { dragon.isDucking = true; dragon.height = 60; }
+});
+
+window.addEventListener('keyup', (e) => { 
+    // Al soltar la tecla de agacharse, recupera su tamaño original
+    if (e.code === 'ArrowDown') { 
+        dragon.isDucking = false; 
+        dragon.height = 110; 
+        dragon.y -= 50; // Compensación para no quedar enterrado en el suelo
+    } 
+});
+
+canvas.addEventListener('click', () => {
+    if (!gameStarted) { startGame(); return; }
+    if (gameOver) return;
+    if (dragon.isGrounded) {
+        dragon.dy = -dragon.jumpForce; dragon.isGrounded = false; dragon.isDucking = false;
+        createExplosion(dragon.x + dragon.width / 2, dragon.y + dragon.height, '#FFD700', 8);
+    }
+});
+
+// ========== GAME LOOP ==========
+function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+
+// ========== INICIO ==========
+init(); gameLoop();
+</script>
+</body>
+</html>
