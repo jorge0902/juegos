@@ -71,6 +71,42 @@
         <h1>🔄 Por favor, gira tu dispositivo</h1>
         <p>Este juego se disfruta mejor en posición horizontal (Landscape).</p>
     </div>
+    
+    <!-- Música de fondo -->
+    <audio id="music-exterior" loop>
+        <source src="musica/Above_the_Clouds.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="music-cueva" loop>
+        <source src="musica/pantalla 2 music/Below_the_Observation_Deck.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script>
+        // Control de música dinámico
+        const musicExterior = document.getElementById('music-exterior');
+        const musicCueva = document.getElementById('music-cueva');
+        
+        musicExterior.volume = 0.5;
+        musicCueva.volume = 0.5;
+        
+        // Función para cambiar la música según el mundo
+        window.cambiarMusica = function(esCueva) {
+            if (esCueva) {
+                musicExterior.pause();
+                musicExterior.currentTime = 0;
+                musicCueva.play().catch(err => console.log('Error al reproducir música cueva:', err));
+            } else {
+                musicCueva.pause();
+                musicCueva.currentTime = 0;
+                musicExterior.play().catch(err => console.log('Error al reproducir música exterior:', err));
+            }
+        };
+        
+        // Inicia con música exterior
+        document.addEventListener('click', () => {
+            musicExterior.play().catch(err => console.log('Auto-play bloqueado:', err));
+        });
+    </script>
+    
     <script src="mariobross1.js"></script>
 </body>
 </html>

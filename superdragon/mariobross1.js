@@ -221,6 +221,7 @@ function update() {
 
 function construirMundoExterior() {
     esMundoCueva = false;
+    cambiarMusica(false);
     [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(true); });
     if (fondoCueva1) fondoCueva1.setVisible(false);
     if (fondoCueva2) fondoCueva2.setVisible(false);
@@ -263,6 +264,7 @@ function construirMundoExterior() {
 
 function construirMundoCueva() {
     esMundoCueva = true;
+    cambiarMusica(true);
     [bgCielo, bgNubes, bgMontanas1, bgMontanas2, bgMontanas3, bgArboles].forEach(bg => { if (bg) bg.setVisible(false); });
     if (fondoCueva1) fondoCueva1.setVisible(true);
     if (fondoCueva2) fondoCueva2.setVisible(true);
